@@ -12809,6 +12809,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let frameRequest = null;
 
     const positionCarousel = () => {
+        if (carousel.dataset.layout === 'tabs') return;
         const activeSlide = slides[activeIndex];
         const wrap = carousel.querySelector('.owner-steps-track-wrap');
         if (!activeSlide || !wrap) return;
@@ -12829,6 +12830,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isActive = tabIndex === activeIndex;
             tab.classList.toggle('is-active', isActive);
             tab.setAttribute('aria-selected', String(isActive));
+            if (carousel.dataset.layout === 'tabs') tab.tabIndex = isActive ? 0 : -1;
         });
 
         slides.forEach((slide, slideIndex) => {
@@ -12844,6 +12846,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Number.isNaN(nextIndex)) return;
             setActiveStep(nextIndex);
         });
+        if (carousel.dataset.layout === 'tabs') {
+            tab.addEventListener('keydown', (event) => {
+                let nextIndex;
+                if (event.key === 'ArrowRight') nextIndex = (activeIndex + 1) % tabs.length;
+                else if (event.key === 'ArrowLeft') nextIndex = (activeIndex - 1 + tabs.length) % tabs.length;
+                else if (event.key === 'Home') nextIndex = 0;
+                else if (event.key === 'End') nextIndex = tabs.length - 1;
+                else return;
+                event.preventDefault();
+                setActiveStep(nextIndex);
+                tabs[nextIndex].focus({ preventScroll: true });
+            });
+        }
     });
 
     window.addEventListener('resize', positionCarousel);

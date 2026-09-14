@@ -19,13 +19,13 @@
     <script async src="js/material-icons-loader.js?v=1"></script>
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Vivat | Alquileres Seguros, Garantías y Contratos Digitales</title>
+    <title>Alquileres en Argentina: buscá y gestioná online | Vivat</title>
 
     <!-- Metadatos Open Graph / WhatsApp / Facebook (Prioritarios para el crawler) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Vivat">
-    <meta property="og:title" content="Vivat | Alquileres Seguros, Garantías y Contratos Digitales">
-    <meta property="og:description" content="Vivat es la plataforma integral de alquileres en Argentina. Buscá propiedades, calificá con Pasaporte Vivat y gestioná contratos digitales 100% online y seguros.">
+    <meta property="og:title" content="Encontrá tu próximo alquiler | Vivat">
+    <meta property="og:description" content="Buscá propiedades, coordiná visitas, presentá tu perfil verificado y firmá el contrato electrónicamente desde un solo lugar.">
     <meta property="og:url" content="https://vivat.com.ar/">
     
     <!-- Imagen Principal (1200x630) optimizada para WhatsApp, Facebook y Twitter -->
@@ -40,18 +40,18 @@
     <!-- Fallbacks para WhatsApp y motores de previsualización -->
     <link rel="image_src" href="https://vivat.com.ar/img/og-vivat.png">
     <meta itemprop="name" content="Vivat | Alquileres Seguros">
-    <meta itemprop="description" content="Vivat es la plataforma integral de alquileres en Argentina. Buscá propiedades, calificá con Pasaporte Vivat y gestioná contratos digitales 100% online y seguros.">
+    <meta itemprop="description" content="Buscá propiedades, coordiná visitas, presentá tu perfil verificado y firmá el contrato electrónicamente desde un solo lugar.">
     <meta itemprop="image" content="https://vivat.com.ar/img/og-vivat.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://vivat.com.ar/">
-    <meta name="twitter:title" content="Vivat | Alquileres Seguros, Garantías y Contratos Digitales">
-    <meta name="twitter:description" content="Vivat es la plataforma integral de alquileres en Argentina. Buscá propiedades, calificá con Pasaporte Vivat y gestioná contratos digitales 100% online y seguros.">
+    <meta name="twitter:title" content="Encontrá tu próximo alquiler | Vivat">
+    <meta name="twitter:description" content="Buscá propiedades, coordiná visitas, presentá tu perfil verificado y firmá el contrato electrónicamente desde un solo lugar.">
     <meta name="twitter:image" content="https://vivat.com.ar/img/og-vivat.png">
 
     <!-- Metadatos SEO y Canonical -->
-    <meta name="description" content="Vivat es la plataforma integral de alquileres en Argentina. Buscá propiedades, calificá con Pasaporte Vivat y gestioná contratos digitales 100% online y seguros.">
+    <meta name="description" content="Encontrá alquileres en Argentina, coordiná visitas, postulate con tu Pasaporte Vivat y firmá el contrato electrónicamente desde la plataforma.">
     <meta name="keywords" content="Vivat, Vivat alquileres, Vivat Argentina, alquileres, alquilar departamento, alquiler seguro, pasaporte vivat, contratos digitales de alquiler, garantia de alquiler, propietarios, corredores inmobiliarios">
     <meta name="author" content="Vivat">
     <meta name="robots" content="index, follow">
@@ -143,7 +143,8 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/tailwind.css?v=2">
-    <link rel="stylesheet" href="css/style.css?v=15">
+    <link rel="stylesheet" href="css/style.css?v=22">
+    <script defer src="js/landing-motion.js?v=4"></script>
     <style>
         /* Flechas Laterales de Carruseles en Modo Escritorio */
         .desktop-carousel-arrow {
@@ -1028,7 +1029,7 @@
 </head>
 
 <body
-    class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
+    class="landing-premium landing-tenant bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
     <!-- Landing Marketplace View -->
     <section id="landing-marketplace-view"
         class="bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
@@ -1037,8 +1038,7 @@
         <script src="js/navbar.js?v=5"></script>
         <main class="pt-16 lg:pt-20">
             <!-- Hero Section -->
-            <section
-                class="relative min-h-[580px] lg:min-h-[640px] flex flex-col items-center justify-center overflow-hidden pt-10 pb-24 sm:pt-12 sm:pb-28 bg-[#09090b]">
+            <section class="premium-hero premium-hero--tenant">
                 <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                     <img alt="Vivat Alquileres"
                         class="w-full h-full object-cover object-center scale-[1.02] transform-gpu brightness-[0.70] dark:brightness-[0.55] filter contrast-[1.05]"
@@ -1053,9 +1053,9 @@
                 </div>
 
                 <!-- Persona Selector (Segmented Pill) -->
-                <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
+                <div class="premium-persona-nav relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
                     <nav class="inline-flex items-center p-1 rounded-full bg-black/40 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-lg" aria-label="Seleccionar perfil">
-                        <a href="index.html"
+                        <a href="index.html" aria-current="page"
                             class="bg-primary text-white px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-bold shadow-sm whitespace-nowrap transition-all duration-200">
                             Soy Inquilino
                         </a>
@@ -1070,18 +1070,18 @@
                     </nav>
                 </div>
 
-                <div class="relative z-10 w-full max-w-4xl px-4 sm:px-6 text-center">
+                <div class="premium-hero-content relative z-10 w-full max-w-5xl px-4 sm:px-6 text-center">
+                    <span class="premium-eyebrow">Vivat para inquilinos</span>
                     <h1
-                        class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-extrabold text-white mb-4 sm:mb-5 tracking-[-0.03em] leading-[1.1]">
-                        Alquilar nunca fue tan rápido, transparente y 100% digital.
+                        class="premium-hero-title font-headline text-white">
+                        Encontrá tu lugar.<br><span>Todo el alquiler, resuelto.</span>
                     </h1>
-                    <div
-                        class="font-body text-base sm:text-lg md:text-xl text-zinc-200/90 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal">
-                        Vivat elimina la burocracia analógica. Buscá, validá tu identidad, firmá y gestioná tu
-                        alquiler directamente desde el celular, sin costos ocultos.
-                    </div>
+                    <p class="premium-hero-lede font-body text-zinc-200/90 max-w-2xl mx-auto">
+                        Descubrí propiedades, presentate una sola vez y firmá desde el celular. Sin carpetas repetidas.
+                        Sin turnos de escribanía.
+                    </p>
                     <div class="max-w-2xl mx-auto">
-                        <form action="buscar.html" method="GET" class="w-full m-0" id="hero-search-form">
+                        <form action="buscar.html" method="GET" class="premium-search w-full m-0" id="hero-search-form">
                             <div class="relative group">
                                 <div
                                     class="relative bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-1.5 sm:p-2 pl-4 sm:pl-6 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-white/40 dark:border-zinc-700/60 flex items-center w-full gap-2 transition-all duration-300 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
@@ -1091,7 +1091,7 @@
                                         <input id="index-location-search" name="location"
                                             class="w-full !bg-transparent text-zinc-900 dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
                                             style="background: transparent !important; background-color: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; height: auto !important; -webkit-appearance: none;"
-                                            placeholder="¿Dónde quieres vivir? (ej. Palermo, Belgrano...)" type="text" autocomplete="off" />
+                                            placeholder="Barrio, ciudad o dirección" aria-label="Barrio, ciudad o dirección" type="text" autocomplete="off" />
                                     </div>
 
                                     <input type="hidden" id="hero-filter-input" name="filter" value="all" />
@@ -1110,10 +1110,10 @@
                                             class="hidden absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white dark:border-zinc-900 pointer-events-none"></span>
                                     </button>
 
-                                    <button type="submit"
+                                    <button type="submit" aria-label="Explorar propiedades"
                                         class="bg-primary hover:bg-[#9a2226] text-white h-10 sm:h-11 px-4 sm:px-6 rounded-full font-bold text-xs sm:text-sm md:text-base transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 border-none outline-none">
                                         <span class="material-symbols-outlined text-lg sm:text-xl">search</span>
-                                        <span class="hidden sm:inline">Buscar</span>
+                                        <span class="hidden sm:inline">Explorar</span>
                                     </button>
                                 </div>
                             </div>
@@ -1122,23 +1122,34 @@
                 </div>
             </section>
 
-            <!-- Hero Stats Section -->
-            <section class="max-w-[1060px] mx-auto px-4 sm:px-6 relative z-20 animate-on-scroll">
-                <div
-                    class="-mt-10 sm:-mt-12 relative z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl text-zinc-900 dark:text-zinc-100 rounded-2xl sm:rounded-full px-6 sm:px-10 py-5 sm:py-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 text-center shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-zinc-200/80 dark:border-zinc-800 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200/70 dark:divide-zinc-800/80">
-                    <div class="pt-2 sm:pt-0">
-                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+50</p>
-                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Propietarios ya publicando</p>
-                    </div>
-                    <div class="pt-4 sm:pt-0">
-                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+2.000</p>
-                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Inquilinos buscando cada mes</p>
-                    </div>
-                    <div class="pt-4 sm:pt-0">
-                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">98%</p>
-                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Tasa de satisfacción del propietario</p>
-                    </div>
-                </div>
+            <!-- A clear journey, from applying to living in the property. -->
+            <section class="landing-journey" aria-label="Tu alquiler en tres pasos">
+                <ol class="landing-journey-steps">
+                    <li>
+                        <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
+                        <span class="landing-journey-number" aria-hidden="true">01</span>
+                        <div>
+                            <h3>Postulate.</h3>
+                            <p>Un mismo perfil para encontrar tu lugar.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4-1 12-12a2.1 2.1 0 0 0-3-3L5 16zM13 20h7"/></svg></span>
+                        <span class="landing-journey-number" aria-hidden="true">02</span>
+                        <div>
+                            <h3>Firmá online.</h3>
+                            <p>Tu contrato, desde el celular.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7"/></svg></span>
+                        <span class="landing-journey-number" aria-hidden="true">03</span>
+                        <div>
+                            <h3>Tené tu alquiler a mano.</h3>
+                            <p>Pagos, documentos y mantenimiento juntos.</p>
+                        </div>
+                    </li>
+                </ol>
             </section>
 
             <!-- Marketplace Featured Properties Section -->
@@ -1147,9 +1158,10 @@
                 <!-- Header con Título -->
                 <div class="flex items-end justify-between mb-8 gap-4">
                     <div>
+                        <span class="premium-kicker">Propiedades disponibles</span>
                         <h2
                             class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
-                            Destacadas
+                            Tu próximo lugar puede estar acá.
                         </h2>
                     </div>
                 </div>
@@ -1193,13 +1205,14 @@
                     if (!grid) return;
                     const card = grid.querySelector('article');
                     const step = card ? (card.offsetWidth + 24) * (window.innerWidth > 1024 ? 2 : 1) : 360;
+                    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
 
                     if (direction > 0 && grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 20) {
-                        grid.scrollTo({ left: 0, behavior: 'smooth' });
+                        grid.scrollTo({ left: 0, behavior });
                     } else if (direction < 0 && grid.scrollLeft <= 10) {
-                        grid.scrollTo({ left: grid.scrollWidth, behavior: 'smooth' });
+                        grid.scrollTo({ left: grid.scrollWidth, behavior });
                     } else {
-                        grid.scrollBy({ left: step * direction, behavior: 'smooth' });
+                        grid.scrollBy({ left: step * direction, behavior });
                     }
                 };
 
@@ -1443,9 +1456,15 @@
                 window.renderLandingFeaturedProperties();
             </script>
 
-            <!-- Discovery & Filter Section -->
-            <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-12 lg:py-16">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            <!-- Premium Tenant Journey -->
+            <section class="premium-story-section max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-16 lg:py-28">
+                <div class="premium-section-heading animate-on-scroll">
+                    <span>Del primer contacto a las llaves</span>
+                    <h2>Alquilar debería sentirse así de simple.</h2>
+                    <p>Una experiencia continua para presentarte, avanzar y cuidar tu alquiler sin volver a empezar en
+                        cada etapa.</p>
+                </div>
+                <div class="premium-story-grid grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                     <article
                         class="group/benefit animate-on-scroll relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
                         <span
@@ -1459,16 +1478,14 @@
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-4">
-                                Pasaporte Vivat</h2>
+                                Tu carpeta, una sola vez.</h2>
                             <p
                                 class="font-body text-base sm:text-lg leading-relaxed text-zinc-600 dark:text-zinc-300 mb-6">
-                                Pagá una única vez un Service Fee tecnológico por tu "Pasaporte del Inquilino" válido
-                                por 60 días. Cubre tu validación biométrica con prueba de vida y firma electrónica
-                                avanzada. Si un propietario no te acepta, podés postularte a otra propiedad sin volver a
-                                pagar.</p>
+                                El Pasaporte Vivat reúne tu identidad, documentación y garantías en un perfil que podés
+                                volver a usar durante 60 días.</p>
                             <a href="pasaporte-vivat.html"
                                 class="inline-flex items-center gap-2 bg-primary text-white hover:bg-primary-container px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md">
-                                <span>Ver Credencial de Ejemplo</span>
+                                <span>Ver cómo funciona</span>
                                 <span class="material-symbols-outlined text-sm">arrow_forward</span>
                             </a>
                         </div>
@@ -1483,14 +1500,14 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
-                            aria-hidden="true">history_edu</span>
+                            aria-hidden="true">travel_explore</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Chau Escribanía</h2>
+                                Visitá. Compará. Elegí.</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Ahorrá tiempo y costos logísticos. La ley no exige escribano para alquilar; firmá tu
-                                contrato con plena seguridad probatoria mediante la captura de IP y geolocalización.</p>
+                                Coordiná visitas, guardá los lugares que te interesan y tomá la decisión con toda la
+                                información de la propiedad a mano.</p>
                         </div>
                     </article>
 
@@ -1507,10 +1524,10 @@
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Panel para Inquilinos</h2>
+                                Postulate sin empezar de cero.</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Gestioná todo tu alquiler desde un solo lugar. Seguimiento de postulación, acceso a tu
-                                contrato digital, registro de comprobantes, inventario y comunicación directa.</p>
+                                Enviá el mismo perfil verificado a distintas propiedades y seguí cada respuesta desde un
+                                único panel.</p>
                         </div>
                     </article>
 
@@ -1523,14 +1540,15 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
-                            aria-hidden="true">photo_camera</span>
+                            aria-hidden="true">draw</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Inventario Digital Inmutable</h2>
+                                Firmá donde estés. Ahorrate la escribanía.</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Olvidate del viejo anexo en papel. Subí fotos y videos del estado del inmueble con
-                                marcas de tiempo (timestamp) para evitar cualquier disputa al finalizar tu contrato.</p>
+                                Revisá y firmá el contrato desde tu celular, con identidad validada y trazabilidad. Si
+                                la operación no exige una certificación adicional, evitás ese trámite, el traslado y su
+                                costo.</p>
                         </div>
                     </article>
 
@@ -1543,14 +1561,34 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
-                            aria-hidden="true">build</span>
+                            aria-hidden="true">payments</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Gestión y Mantenimiento</h2>
+                                Cada pago deja una historia clara.</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Pagá tu alquiler con métodos digitales y reportá problemas edilicios abriendo tickets
-                                con evidencia fotográfica directamente desde la app.</p>
+                                Informá pagos, guardá comprobantes y consultá las confirmaciones del propietario cuando
+                                las necesites.</p>
+                        </div>
+                    </article>
+
+                    <article
+                        class="group/benefit animate-on-scroll delay-500 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
+                        <span
+                            class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
+                        <div
+                            class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10">
+                        </div>
+                        <span
+                            class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none"
+                            aria-hidden="true">home_repair_service</span>
+                        <div class="relative z-10 max-w-xl">
+                            <h2
+                                class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
+                                Cuando ya vivís ahí, Vivat sigue.</h2>
+                            <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
+                                El inventario de ingreso, los problemas de mantenimiento y su seguimiento quedan
+                                vinculados a tu alquiler.</p>
                         </div>
                     </article>
                 </div>
@@ -1562,12 +1600,12 @@
                 <div class="max-w-[1280px] mx-auto">
                     <h2
                         class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-6 text-center tracking-tight leading-tight">
-                        Pasaporte Vivat: Tu perfil listo para alquilar
+                        Presentate una vez. Que te conozcan por lo importante.
                     </h2>
                     <p
                         class="font-body text-lg md:text-xl text-zinc-600 dark:text-zinc-300 mb-16 max-w-3xl mx-auto text-center">
-                        Aboná un único Service Fee tecnológico, verificá tu perfil en minutos y postulate a tu próximo
-                        hogar sin fricciones.
+                        Tu Pasaporte Vivat ordena la información que una operación necesita y te acompaña durante 60
+                        días, incluso si cambiás de propiedad.
                     </p>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
@@ -1582,12 +1620,11 @@
                             </div>
                             <h3
                                 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                100% Digital y sin escribanías
+                                Identidad validada
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Pagás el pase, validás tu identidad con biometría y cargás tu información. En minutos,
-                                tu perfil queda verificado y habilitado para firmar tu contrato de forma electrónica con
-                                plena validez legal.
+                                Completá la validación biométrica y cargá la información necesaria para que propietarios
+                                y corredores puedan evaluar tu postulación con datos consistentes.
                             </p>
                         </article>
 
@@ -1600,12 +1637,11 @@
                             </div>
                             <h3
                                 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                Un pago, 60 días de oportunidades
+                                Vigente durante 60 días
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Si el propietario elige a otro candidato o cambias de opinión, no perdés tu dinero. Tu
-                                pasaporte te permite postularte a todas las propiedades que quieras dentro de la red
-                                durante 60 días sin costo extra.
+                                Si una propiedad no avanza o cambiás de opinión, reutilizá tu Pasaporte Vivat para
+                                postularte a otros avisos de la red durante su vigencia.
                             </p>
                         </article>
 
@@ -1618,12 +1654,11 @@
                             </div>
                             <h3
                                 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                Privacidad blindada
+                                Información centralizada
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Tus documentos y recibos de sueldo están encriptados. Los propietarios y corredores solo
-                                visualizan un certificado validado de tu identidad y capacidad de pago, manteniendo tus
-                                archivos originales bajo estricta confidencialidad.
+                                Evitá enviar la misma carpeta por distintos canales. Tu perfil reúne el estado de las
+                                verificaciones, los ingresos declarados y las garantías vinculadas.
                             </p>
                         </article>
                     </div>
@@ -1632,7 +1667,7 @@
 
             <!-- Types of Accommodation Section -->
             <section
-                class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-20 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
+                class="hidden max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-20 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
                 <h2
                     class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
                     Tipos de alojamiento en alquiler
@@ -1669,7 +1704,7 @@
                             Departamentos
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Descubre departamentos en ubicaciones estratégicas, con excelente conectividad, diseño moderno y todos los servicios.
+                            Encontrá departamentos en distintas ubicaciones y compará precio, ambientes y servicios.
                         </p>
                     </a>
 
@@ -1711,24 +1746,23 @@
 
             <!-- Owner Call to Action Section -->
             <section
-                class="bg-zinc-100/50 dark:bg-zinc-900/30 py-24 px-4 sm:px-6 lg:px-12 text-center border-b border-zinc-200/40 dark:border-zinc-800/40 relative overflow-hidden animate-on-scroll">
+                class="hidden bg-zinc-100/50 dark:bg-zinc-900/30 py-24 px-4 sm:px-6 lg:px-12 text-center border-b border-zinc-200/40 dark:border-zinc-800/40 relative overflow-hidden animate-on-scroll">
                 <div
                     class="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-0 dark:opacity-100 pointer-events-none">
                 </div>
                 <div class="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
                     <h2
                         class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-6 tracking-tight leading-tight">
-                        ¿Tienes una casa para alquilar?
+                        ¿Sos propietario?
                     </h2>
                     <p
                         class="font-body text-zinc-600 dark:text-zinc-400 text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed">
-                        Súbela a <span class="font-semibold text-primary dark:text-red-400">Vivat</span> y deja que
-                        nos
-                        encarguemos de todo.
+                        Publicá tu propiedad y gestioná postulaciones, contrato, cobros y mantenimiento desde un mismo
+                        panel.
                     </p>
                     <a href="propietarios.html"
                         class="inline-flex items-center justify-center rounded-full border border-zinc-800 dark:border-zinc-200 px-10 py-4 font-body font-bold text-base text-zinc-800 dark:text-zinc-200 hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-200 dark:hover:text-zinc-900 transition-all duration-300 shadow-sm hover:shadow active:scale-[0.98]">
-                        Conocer los servicios para propietarios
+                        Ver soluciones para propietarios
                     </a>
                 </div>
             </section>
@@ -1741,11 +1775,11 @@
                     <div>
                         <span
                             class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-2 block">
-                            Alquileres por Destino
+                            Explorar por ciudad
                         </span>
                         <h2
                             class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
-                            Publicaciones por ciudad
+                            Más lugares para imaginar tu próxima etapa.
                         </h2>
                     </div>
                 </div>
@@ -1793,7 +1827,8 @@
                         Próximamente más inmuebles en esta ciudad
                     </h3>
                     <p class="font-body text-zinc-500 dark:text-zinc-400 text-sm max-w-md mx-auto mb-6">
-                        Estamos sumando nuevos alquileres constantemente. ¿Tenés una propiedad aquí? Publicala en Vivat y encontrá inquilinos calificados.
+                        Estamos sumando nuevos alquileres. ¿Tenés una propiedad en esta ciudad? Publicala en Vivat y
+                        empezá a recibir consultas.
                     </p>
                     <a href="propietarios.html"
                         class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-[0.98]">
@@ -1806,7 +1841,7 @@
                 <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-200/40 dark:border-zinc-800/40">
                     <div class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
                         <span class="material-symbols-outlined text-base text-primary dark:text-red-400">verified</span>
-                        <span>Contratos 100% digitales y gestión transparente con Vivat</span>
+                        <span>Visitas, postulaciones y gestión del alquiler desde un mismo lugar</span>
                     </div>
                     <a id="city-section-view-more-btn" href="buscar.html"
                         class="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-full font-body font-bold text-sm transition-all shadow-md active:scale-[0.98]">
@@ -1827,13 +1862,14 @@
                         if (!grid) return;
                         const card = grid.querySelector('article');
                         const step = card ? (card.offsetWidth + 24) * (window.innerWidth > 1024 ? 2 : 1) : 360;
+                        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
 
                         if (direction > 0 && grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 20) {
-                            grid.scrollTo({ left: 0, behavior: 'smooth' });
+                            grid.scrollTo({ left: 0, behavior });
                         } else if (direction < 0 && grid.scrollLeft <= 10) {
-                            grid.scrollTo({ left: grid.scrollWidth, behavior: 'smooth' });
+                            grid.scrollTo({ left: grid.scrollWidth, behavior });
                         } else {
-                            grid.scrollBy({ left: step * direction, behavior: 'smooth' });
+                            grid.scrollBy({ left: step * direction, behavior });
                         }
                     };
 
@@ -2223,12 +2259,11 @@
                     <div class="lg:sticky lg:top-28">
                         <h2 id="tenant-faq-title"
                             class="font-headline text-[48px] leading-[1.05] md:text-6xl md:leading-[1.08] font-light text-on-background dark:text-white mb-7">
-                            Tus<br>preguntas,<br>respondidas</h2>
-                        <p class="font-body text-lg text-zinc-600 dark:text-zinc-300 mb-2">&iquest;Tienes una pregunta
+                            Antes de<br>dar el próximo<br>paso</h2>
+                        <p class="font-body text-lg text-zinc-600 dark:text-zinc-300 mb-2">&iquest;Tenés una pregunta
                             diferente?</p>
-                        <a href="#"
-                            class="inline-flex font-body text-lg font-bold text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors">Descubre
-                            m&aacute;s</a>
+                        <a href="pasaporte-vivat.html"
+                            class="inline-flex font-body text-lg font-bold text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors">Conocé el Pasaporte Vivat</a>
                     </div>
 
                     <div class="owner-faq-list">
@@ -2247,11 +2282,10 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        El Pasaporte Vivat es tu perfil verificado de inquilino. Confirma tu identidad y
-                                        respaldo de pago para que te postules de forma directa a cualquier propiedad sin
-                                        tener que presentar fotocopias ni papeles cada vez. Se genera automáticamente y
-                                        tiene una vigencia de 60 días para postularte a todas las viviendas que te
-                                        interesen.
+                                        El Pasaporte Vivat es tu perfil verificado como inquilino. Reúne el estado de tu
+                                        identidad, documentación, ingresos y garantías para que no tengas que presentar
+                                        la misma carpeta en cada postulación. Una vez emitido, tiene una vigencia de 60
+                                        días dentro de la red.
                                     </p>
                                 </div>
                             </div>
@@ -2271,10 +2305,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Podés explorar las propiedades disponibles en nuestro Marketplace, aplicar
-                                        filtros por precio, tipo o ubicación y tocar en "Ver detalles". Desde allí podés
-                                        agendar una visita presencial o enviar tu postulación de forma directa en pocos
-                                        clics.
+                                        Podés recorrer las propiedades disponibles y abrir la ficha de la que te
+                                        interesa. Desde ahí coordinás una visita o enviás tu postulación en pocos pasos.
                                     </p>
                                 </div>
                             </div>
@@ -2309,7 +2341,7 @@
                                 type="button" aria-expanded="false">
                                 <span
                                     class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo
-                                    funciona la firma digital del contrato de alquiler?</span>
+                                    funciona la firma electrónica y qué costo me evita?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -2317,9 +2349,12 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Una vez aprobada la postulación, el contrato de locación digital se genera en la
-                                        app. Podés revisarlo detenidamente y firmarlo de forma legal y segura desde tu
-                                        teléfono o computadora sin necesidad de trasladarte a una escribanía.
+                                        Una vez aprobada la postulación, revisás las condiciones y firmás
+                                        electrónicamente desde tu teléfono o computadora. Vivat registra la validación
+                                        de identidad y la trazabilidad del proceso. En una locación que no requiere una
+                                        certificación adicional, esto evita coordinar y pagar una escribanía solo para
+                                        firmar; si la operación tiene una exigencia particular, las partes pueden
+                                        acordar esa certificación por separado.
                                     </p>
                                 </div>
                             </div>
@@ -2363,10 +2398,9 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Absolutamente. Operamos con encriptación de nivel bancario en cumplimiento con
-                                        la Ley de Protección de Datos Personales (Ley 25.326). Tu documentación personal
-                                        está resguardada y solo se comparte la información estrictamente necesaria para
-                                        tu perfil de alquiler.
+                                        Vivat centraliza tu documentación y muestra el estado de las verificaciones
+                                        necesarias para evaluar la postulación. Revisá los permisos y condiciones antes
+                                        de compartir información sensible con cada operación.
                                     </p>
                                 </div>
                             </div>
@@ -2466,18 +2500,18 @@
                     <!-- Heading -->
                     <h2
                         class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight mb-4 animate-on-scroll">
-                        Encuentra tu casa ideal con Vivat
+                        La próxima llave puede ser la tuya.
                     </h2>
                     <p
                         class="font-body text-zinc-500 dark:text-zinc-400 text-base sm:text-lg mb-8 max-w-md animate-on-scroll delay-100">
-                        Miles de propiedades verificadas con fotos reales y reserva 100% online y segura.
+                        Descubrí propiedades, coordiná una visita y empezá tu alquiler con todo resuelto.
                     </p>
 
                     <!-- Interactive Button with Brand Red and Smooth Scroll -->
                     <button
-                        onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: 'smooth' })"
+                        onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })"
                         class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white px-8 py-4 rounded-full font-body font-bold text-base shadow-lg hover:shadow-xl transition-all active:scale-[0.98] animate-on-scroll delay-200">
-                        Empieza a buscar
+                        Empezá a buscar
                     </button>
                 </div>
             </section>
@@ -2707,21 +2741,6 @@
             } else {
                 console.error("App module not loaded");
             }
-        });
-    </script>
-    <!-- Animations Observer -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-            window.marketplaceObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        window.marketplaceObserver.unobserve(entry.target);
-                    }
-                });
-            }, observerOptions);
-            document.querySelectorAll('.animate-on-scroll').forEach(el => window.marketplaceObserver.observe(el));
         });
     </script>
     <script>
