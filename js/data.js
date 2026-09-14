@@ -5379,6 +5379,7 @@ var DataManager = {
         const payload = {
             id_contrato: Number(idContrato),
             consentGiven: metadata.consentGiven === true,
+            documentHash: metadata.documentHash,
             metadata: {
                 userAgent: navigator.userAgent,
                 geolocation: metadata.geolocation || null,

@@ -1,5 +1,5 @@
 const APPROVED = new Set(['approved', 'success', 'passed']);
-const DECLINED = new Set(['declined', 'rejected', 'failed', 'failure']);
+const DECLINED = new Set(['declined', 'rejected', 'failed', 'failure', 'expired', 'abandoned', 'cancelled']);
 
 function normalizedStatus(value) {
   if (typeof value === 'boolean') return value ? 'approved' : 'declined';
@@ -51,6 +51,7 @@ export function evaluateFullKyc(remote, expectedWorkflowId) {
   const evidenceComplete = checks.document && checks.liveness && checks.faceMatch;
 
   let status = 'pending';
+  if (['in review', 'in_review', 'review required'].includes(overall)) status = 'review_required';
   if (DECLINED.has(overall)) status = 'declined';
   else if (APPROVED.has(overall) && workflowMatches && evidenceComplete) status = 'approved';
   else if (APPROVED.has(overall)) status = 'review_required';
