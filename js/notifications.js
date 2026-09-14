@@ -7,7 +7,9 @@
 (function () {
     'use strict';
 
-    const NOTIF_STORAGE_KEY = 'vivat_in_app_notifications';
+    let NOTIF_STORAGE_KEY = 'vivat_in_app_notifications:anonymous';
+    let recipient = null;
+    let authListenerInstalled = false;
     const BROADCAST_CHANNEL_NAME = 'vivat_notifications_realtime_channel';
 
     // Generar un ID único por pestaña para evitar loops de eco
@@ -22,19 +24,7 @@
         TAB_ID = 'tab_' + Date.now();
     }
 
-    const DEFAULT_NOTIFICATIONS = [
-        {
-            id: 'notif_welcome_01',
-            title: '¡Bienvenido a Vivat! 🏠',
-            message: 'Tu cuenta y Pasaporte digital están listos. Explora alquileres verificados y postúlate con 1 click.',
-            type: 'system',
-            icon: 'verified_user',
-            link: 'index.html',
-            role: 'ALL',
-            read: true,
-            createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
-        }
-    ];
+
 
     // Detectar rol activo del usuario actual
     function getActiveUserRole() {
@@ -77,86 +67,9 @@
 
     // Comprobar si el usuario actual es el destinatario de la notificación
     function isTargetRecipient(notif) {
-        if (!notif) return false;
-        const currentRole = getActiveUserRole();
-        let uLocal = {};
-        try {
-            uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-        } catch (e) {}
-        let myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-        let myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
-
-        if (!myEmail && window.ContractsManager && typeof window.ContractsManager.resolveCurrentUserInfo === 'function') {
-            try {
-                const cUser = window.ContractsManager.resolveCurrentUserInfo();
-                if (cUser?.email) myEmail = cUser.email.toLowerCase().trim();
-                if (cUser?.profileId && !myProfileId) myProfileId = cUser.profileId;
-            } catch(e) {}
-        }
-
-        // Si la notificación apunta a un perfil o email específico:
-        if (notif.targetProfileId && myProfileId && String(notif.targetProfileId) !== String(myProfileId)) {
-            return false;
-        }
-        if (notif.targetEmail && myEmail && notif.targetEmail.toLowerCase().trim() !== myEmail) {
-            return false;
-        }
-
-        // Si es un mensaje de chat: nunca mostrar notificación si proviene de mí mismo
-        if (notif.type === 'chat' || notif.type === 'message') {
-            if (NotificationManager && typeof NotificationManager.isOwnMessage === 'function' && NotificationManager.isOwnMessage(notif.id || notif.messageId)) {
-                return false;
-            }
-            if (notif.senderEmail && myEmail && notif.senderEmail.toLowerCase().trim() === myEmail) {
-                return false;
-            }
-            if (notif.senderProfileId && myProfileId && String(notif.senderProfileId) === String(myProfileId)) {
-                return false;
-            }
-            // Inquilino no recibe notificaciones de mensajes emitidos por Inquilino (y viceversa)
-            if (notif.senderRole && notif.senderRole.toUpperCase() === currentRole) {
-                return false;
-            }
-        }
-
-        // Si viene remitente explícito y coincide con el usuario activo:
-        const isSender = (notif.senderTabId && notif.senderTabId === TAB_ID) ||
-                         (notif.senderEmail && myEmail && notif.senderEmail.toLowerCase().trim() === myEmail) ||
-                         (notif.senderProfileId && myProfileId && String(notif.senderProfileId) === String(myProfileId)) ||
-                         (NotificationManager && typeof NotificationManager.isOwnMessage === 'function' && NotificationManager.isOwnMessage(notif.id));
-
-        // Si fui yo quien la envió, nunca auto-notificarme
-        if (isSender) {
-            if (notif.type === 'chat' || notif.type === 'message') {
-                return false;
-            }
-            if (notif.senderRole && notif.role && notif.role !== 'ALL' && notif.role !== notif.senderRole) {
-                return false;
-            }
-            // Auto-notificaciones de firmas o postulaciones
-            if (notif.type === 'contract' && (notif.title?.includes('firmó') || notif.title?.includes('firmado') || notif.message?.includes('completó su firma') || notif.message?.includes('firmó el contrato'))) {
-                return false;
-            }
-            if (notif.type === 'application' && (notif.title?.includes('postulación recibida') || notif.message?.includes('se ha postulado'))) {
-                return false;
-            }
-        }
-
-        // Filtrado por Rol de destino
-        if (notif.role && notif.role !== 'ALL') {
-            const targetRole = notif.role.toUpperCase();
-            if (targetRole === 'OWNER' && currentRole !== 'OWNER' && currentRole !== 'BROKER') {
-                return false;
-            }
-            if (targetRole === 'TENANT' && currentRole !== 'TENANT') {
-                return false;
-            }
-            if (targetRole === 'BROKER' && currentRole !== 'BROKER') {
-                return false;
-            }
-        }
-
-        return true;
+        if (!notif || !recipient) return false;
+        if (notif.targetProfileId) return String(notif.targetProfileId) === String(recipient.profileId);
+        return Boolean(notif.targetEmail && String(notif.targetEmail).trim().toLowerCase() === recipient.email);
     }
 
     // BroadcastChannel cross-tab/cross-window
@@ -541,10 +454,7 @@
                         // No se usa el payload directamente: se vuelve a leer por
                         // REST con la sesión actual, que aplica RLS y confirma que
                         // la notificación pertenece al perfil autenticado.
-                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Notificacion' }, async (payload) => {
-                            const dbNotification = payload.new;
-                            if (!dbNotification?.id_notificacion) return;
-
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'Notificacion' }, async (payload) => {
                             await NotificationManager.fetchFromDB(true);
                         })
                         // 3. Postgres Changes: Nueva Solicitud (Postulación)
@@ -620,50 +530,29 @@
             this.initRealtimeWebSockets();
         },
 
-        markAsRead: function (notifId) {
-            let allStored = [];
-            try {
-                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) allStored = parsed;
-                }
-            } catch (e) { }
-
-            const target = allStored.find(n => n.id === notifId);
-            if (target) {
-                target.read = true;
-                this.saveAll(allStored);
-                
-                if (window.supabaseClient) {
-                    window.supabaseClient.from('Notificacion').update({ leida: true }).eq('id_notificacion', notifId).then();
-                }
-            }
+        markAsRead: async function (notifId) {
+            return this.persistRead(this.getAll().filter(n => String(n.id) === String(notifId) && !n.read));
         },
 
-        markAllAsRead: function () {
-            let allStored = [];
-            try {
-                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) allStored = parsed;
-                }
-            } catch (e) { }
+        markAllAsRead: async function () {
+            return this.persistRead(this.getAll().filter(n => !n.read));
+        },
 
-            const activeRole = getActiveUserRole();
-            let unreadIds = [];
-            allStored.forEach(n => {
-                if ((n.role === 'ALL' || n.role === activeRole) && !n.read) {
-                    n.read = true;
-                    unreadIds.push(n.id);
+        persistRead: async function (notifications) {
+            if (!recipient || !notifications.length) return;
+            const accountKey = NOTIF_STORAGE_KEY;
+            const ids = notifications.filter(n => n.persisted).map(n => n.id);
+            if (ids.length) {
+                const { error } = await window.supabaseClient.from('Notificacion').update({ leida: true })
+                    .eq('id_perfil_destino', recipient.profileId).in('id_notificacion', ids);
+                if (error) {
+                    console.error('[Notificaciones] No se pudo guardar la lectura:', error);
+                    return;
                 }
-            });
-            this.saveAll(allStored);
-            
-            if (window.supabaseClient && unreadIds.length > 0) {
-                window.supabaseClient.from('Notificacion').update({ leida: true }).in('id_notificacion', unreadIds).then();
             }
+            if (accountKey !== NOTIF_STORAGE_KEY) return;
+            const selected = new Set(notifications.map(n => String(n.id)));
+            this.saveAll(this.getAll().map(n => selected.has(String(n.id)) ? { ...n, read: true } : n));
         },
 
         _activeToastKeys: new Set(),
@@ -863,103 +752,50 @@
         },
 
         fetchFromDB: async function (showLatestToast = false) {
-            if (!window.supabaseClient) return;
-            
+            const client = window.supabaseClient;
+            if (!client || this._fetching) return;
+            if (!authListenerInstalled) {
+                authListenerInstalled = true;
+                client.auth.onAuthStateChange(() => {
+                    recipient = null;
+                    NOTIF_STORAGE_KEY = 'vivat_in_app_notifications:anonymous';
+                    this._processedNotifIds.clear();
+                    this.updateBadge(); this.renderDropdown();
+                    setTimeout(() => this.fetchFromDB(), 0);
+                });
+            }
+            this._fetching = true;
             try {
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                if (!session) return;
-                
-                const { data: authData } = await window.supabaseClient.auth.getUser();
-                const authUser = authData?.user;
-                if (!authUser) return;
-                const { data: profile, error: profileError } = await window.supabaseClient
-                    .from('Perfil')
-                    .select('id_perfil')
-                    .eq('user_id', authUser.id)
-                    .maybeSingle();
-                if (profileError || !profile?.id_perfil) return;
-
-                // Never derive authorization from a mutable role or localStorage.
-                // Backend jobs must fan out broad announcements to individual
-                // recipients before saving them.
-                const query = window.supabaseClient
-                    .from('Notificacion')
-                    .select('*')
-                    .eq('id_perfil_destino', profile.id_perfil)
-                    .order('creado_en', { ascending: false })
-                    .limit(40);
-                
-                const { data, error } = await query;
-
-                if (error) {
-                    console.error('[Notificaciones] Error al descargar de DB:', error);
+                const { data: authData } = await client.auth.getUser();
+                const user = authData?.user;
+                if (!user) {
+                    recipient = null;
+                    NOTIF_STORAGE_KEY = 'vivat_in_app_notifications:anonymous';
+                    this.updateBadge(); this.renderDropdown();
                     return;
                 }
-                
-                if (data && data.length > 0) {
-                    let allStored = [];
-                    try {
-                        const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed)) allStored = parsed;
-                        }
-                    } catch (e) { }
-
-                    let hasNew = false;
-                    const freshNotifications = [];
-                    data.reverse().forEach(dbn => {
-                        const localFormat = {
-                            id: dbn.id_notificacion,
-                            title: dbn.titulo,
-                            message: dbn.mensaje,
-                            type: dbn.tipo,
-                            icon: dbn.icono,
-                            link: dbn.enlace,
-                            role: dbn.rol_destino,
-                            read: dbn.leida,
-                            createdAt: dbn.creado_en,
-                            senderRole: dbn.rol_emisor,
-                            senderProfileId: dbn.id_perfil_emisor,
-                            targetProfileId: dbn.id_perfil_destino
-                        };
-                        
-                        // Authorization was enforced by the authenticated
-                        // profile filter above (and again by RLS). Do not let
-                        // mutable local role state hide or reclassify it.
-                        const idx = allStored.findIndex(n => n.id === localFormat.id);
-                        if (idx >= 0) {
-                            if (allStored[idx].read !== localFormat.read) {
-                                allStored[idx].read = localFormat.read;
-                                hasNew = true;
-                            }
-                        } else {
-                            allStored.unshift(localFormat);
-                            if (!this._processedNotifIds.has(localFormat.id)) {
-                                freshNotifications.push(localFormat);
-                            }
-                            this._processedNotifIds.add(localFormat.id);
-                            hasNew = true;
-                        }
-                    });
-                    
-                    if (hasNew) {
-                        allStored.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                        if (allStored.length > 40) allStored = allStored.slice(0, 40);
-                        localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
-                        this.updateBadge();
-                        this.renderDropdown();
-
-                        if (showLatestToast && freshNotifications.length > 0) {
-                            freshNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                            this.showToast(freshNotifications[0]);
-                            playNotificationChime();
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error('[Notificaciones] Exception fetchFromDB:', err);
-            }
+                const { data: profile, error: profileError } = await client.from('Perfil')
+                    .select('id_perfil').eq('user_id', user.id).maybeSingle();
+                if (profileError || !profile) throw profileError || new Error('Perfil no disponible');
+                const { data, error } = await client.from('Notificacion').select('*')
+                    .eq('id_perfil_destino', profile.id_perfil).order('creado_en', { ascending: false }).limit(100);
+                if (error) throw error;
+                const { data: current } = await client.auth.getSession();
+                if (current?.session?.user?.id !== user.id) return;
+                recipient = { profileId: profile.id_perfil, email: String(user.email || '').toLowerCase() };
+                NOTIF_STORAGE_KEY = 'vivat_in_app_notifications:' + user.id;
+                const previousIds = new Set(this.getAll().map(n => String(n.id)));
+                const list = (data || []).map(n => ({
+                    id: n.id_notificacion, title: n.titulo, message: n.mensaje, type: n.tipo,
+                    icon: n.icono, link: n.enlace, role: n.rol_destino, read: n.leida,
+                    createdAt: n.creado_en, targetProfileId: n.id_perfil_destino, persisted: true
+                }));
+                this.saveAll(list);
+                const fresh = list.find(n => !n.read && !previousIds.has(String(n.id)));
+                if (showLatestToast && fresh) { this.showToast(fresh); playNotificationChime(); }
+            } catch (error) {
+                console.error('[Notificaciones] No se pudo sincronizar:', error);
+            } finally { this._fetching = false; }
         },
 
         initUI: function () {

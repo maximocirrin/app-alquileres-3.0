@@ -1,10 +1,10 @@
-import crypto from 'crypto';
-import { generateAuditTrailPdf, generateOriginalContractPdf } from './pdf-generator.js';
+import { contractRevision, uploadImmutable, assertDocumentHash } from './integrity.js';
+import { refreshSignature } from './didit.js';
+import { generateAuditTrailPdf } from './pdf-generator.js';
 import {
   getAuthenticatedUser,
   getContractForProfile,
   getSupabaseAdmin,
-  isSafeStoragePath,
   parsePositiveInteger,
   readJsonBody,
   requireProfile,
@@ -19,26 +19,6 @@ function approvedByDidit(signature) {
   return signature?.estado_firma === 'biometria_aprobada' && ['APPROVED', 'SUCCESS', 'PASSED'].includes(String(signature.didit_status || '').toUpperCase());
 }
 
-function isSafeContractObjectPath(value, contractId) {
-  return value === `contrato_${contractId}/contrato_original.pdf`;
-}
-
-async function hydrateInventoryImages(supabase, inventory, contractId) {
-  if (!inventory || !Array.isArray(inventory.items)) return inventory || null;
-  const items = await Promise.all(inventory.items.map(async (item) => {
-    const paths = Array.isArray(item.fotos_urls)
-      ? item.fotos_urls.filter((path) => isSafeStoragePath(path, contractId))
-      : [];
-    const urls = await Promise.all(paths.map(async (path) => {
-      const { data, error } = await supabase.storage
-        .from('contratos_firmados')
-        .createSignedUrl(path, 5 * 60);
-      return error ? null : data?.signedUrl || null;
-    }));
-    return { ...item, fotos_urls: urls.filter(Boolean) };
-  }));
-  return { ...inventory, items };
-}
 
 async function issueTrustedTimestamp(hash) {
   const endpoint = String(process.env.TSA_SERVER_URL || '').trim();
@@ -81,6 +61,7 @@ async function issueTrustedTimestamp(hash) {
 }
 
 export default async function sellarHandler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
   if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
@@ -95,7 +76,7 @@ export default async function sellarHandler(req, res) {
     if (!signatureId) return res.status(400).json({ ok: false, error: 'Invalid signature id.' });
 
     const supabase = getSupabaseAdmin();
-    const { data: signature, error: signatureError } = await supabase
+    let { data: signature, error: signatureError } = await supabase
       .from('Firma_contrato')
       .select('id_firma, id_contrato, id_perfil_firmante, rol_firmante, estado_firma, didit_status, didit_session_id, didit_scores, ip_origen, user_agent, url_audit_trail_pdf')
       .eq('id_firma', signatureId)
@@ -109,6 +90,11 @@ export default async function sellarHandler(req, res) {
     const { contract, role, error: contractError } = await getContractForProfile(supabase, signature.id_contrato, profile.id_perfil);
     if (contractError) throw contractError;
     if (!contract || !role) return sendForbidden(res, 'No eres parte de este contrato.');
+    if (signature.estado_firma === 'sellada') return res.status(200).json({ ok: true, data: {
+      id_firma: signature.id_firma, id_contrato: signature.id_contrato, estado_firma: signature.estado_firma,
+      url_audit_trail_pdf: signature.url_audit_trail_pdf
+    } });
+    signature = await refreshSignature(supabase, signature);
     if (!approvedByDidit(signature)) {
       return res.status(409).json({ ok: false, error: 'Verification pending.', message: 'La aprobación biométrica aún no fue confirmada por Didit.' });
     }
@@ -119,6 +105,9 @@ export default async function sellarHandler(req, res) {
       .eq('id_contrato', signature.id_contrato)
       .single();
     if (detailError || !contractDetail) throw detailError || new Error('Contract not found.');
+    if (!signature.didit_scores?.contract_revision || signature.didit_scores.contract_revision !== contractRevision(contractDetail)) {
+      return res.status(409).json({ ok: false, message: 'Las condiciones cambiaron o esta sesión no registró la versión del contrato. Debe iniciarse una nueva firma.' });
+    }
 
     const { data: signer, error: signerError } = await supabase
       .from('Perfil')
@@ -129,57 +118,17 @@ export default async function sellarHandler(req, res) {
     if (signerError || !signer) throw signerError || new Error('Signer profile not found.');
 
     const contractId = Number(signature.id_contrato);
-    const originalPath = `contrato_${contractId}/contrato_original.pdf`;
-    let originalBytes;
-    let originalHash = contractDetail.hash_original_sha256 || null;
-
-    if (isSafeContractObjectPath(contractDetail.url_contrato_original_pdf, contractId)) {
-      const { data, error } = await supabase.storage.from('contratos_firmados').download(originalPath);
-      if (error || !data) throw error || new Error('Original contract file is unavailable.');
-      originalBytes = Buffer.from(await data.arrayBuffer());
-      originalHash = crypto.createHash('sha256').update(originalBytes).digest('hex');
-      if (contractDetail.hash_original_sha256 && originalHash !== contractDetail.hash_original_sha256) {
-        throw new Error('Original contract integrity check failed.');
-      }
-    } else {
-      const { data: inventory } = await supabase
-        .from('Inventario_Digital')
-        .select('*, items:Detalle_Inventario_Item(*, Item:id_item(nombre), Estado_item:id_estado_item(nombre))')
-        .eq('id_contrato', contractId)
-        .maybeSingle();
-      const hydratedInventory = await hydrateInventoryImages(supabase, inventory, contractId);
-
-      const { data: passports } = await supabase
-        .from('Pasaporte_vivat')
-        .select('id_pasaporte')
-        .eq('id_perfil', contractDetail.id_perfil_inquilino);
-      const passportIds = (passports || []).map((item) => item.id_pasaporte).filter(Boolean);
-      const { data: guarantors } = passportIds.length > 0
-        ? await supabase.from('Garante').select('*').in('id_pasaporte', passportIds)
-        : { data: [] };
-
-      originalBytes = await generateOriginalContractPdf({
-        contractId,
-        contrato: contractDetail,
-        propiedad: contractDetail.Propiedad || {},
-        inquilino: contractDetail.Inquilino || {},
-        propietario: contractDetail.Propietario || {},
-        garantes: guarantors || [],
-        inventario: hydratedInventory
-      });
-      originalHash = crypto.createHash('sha256').update(originalBytes).digest('hex');
-      const { error: uploadError } = await supabase.storage.from('contratos_firmados').upload(originalPath, originalBytes, {
-        contentType: 'application/pdf',
-        upsert: false
-      });
-      if (uploadError) throw uploadError;
-      const { error: updateError } = await supabase
-        .from('Contrato')
-        .update({ hash_original_sha256: originalHash, url_contrato_original_pdf: originalPath })
-        .eq('id_contrato', contractId)
-        .is('hash_original_sha256', null);
-      if (updateError) throw updateError;
+    const originalHash = signature.didit_scores?.document_hash;
+    const originalPath = signature.didit_scores?.document_path;
+    if (!/^[a-f0-9]{64}$/.test(originalHash || '') ||
+        originalPath !== `contrato_${contractId}/contrato_original_${originalHash}.pdf` ||
+        contractDetail.hash_original_sha256 !== originalHash ||
+        contractDetail.url_contrato_original_pdf !== originalPath) {
+      return res.status(409).json({ ok: false, message: 'La firma no está vinculada al PDF aceptado. Revisá el documento e iniciá una nueva firma.' });
     }
+    const { data: originalFile, error: originalError } = await supabase.storage.from('contratos_firmados').download(originalPath);
+    if (originalError || !originalFile) throw originalError || new Error('Original contract unavailable.');
+    assertDocumentHash(Buffer.from(await originalFile.arrayBuffer()), originalHash);
 
     const audit = await generateAuditTrailPdf({
       contractId,
@@ -199,12 +148,8 @@ export default async function sellarHandler(req, res) {
     // This is deliberately a real external dependency. A locally fabricated
     // JSON object is not an RFC 3161 timestamp and must never be presented as one.
     const timestamp = await issueTrustedTimestamp(audit.auditTrailHash);
-    const auditPath = `contrato_${contractId}/audit_trail_firma_${signature.id_firma}.pdf`;
-    const { error: auditUploadError } = await supabase.storage.from('contratos_firmados').upload(auditPath, audit.auditTrailBytes, {
-      contentType: 'application/pdf',
-      upsert: false
-    });
-    if (auditUploadError) throw auditUploadError;
+    const auditPath = `contrato_${contractId}/audit_trail_firma_${signature.id_firma}_${audit.auditTrailHash}.pdf`;
+    await uploadImmutable(supabase, auditPath, audit.auditTrailBytes);
 
     const { data: updated, error: updateError } = await supabase
       .from('Firma_contrato')

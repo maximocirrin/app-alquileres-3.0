@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import { diditRequest } from './didit.js';
+import { prepareContractDocument, assertReviewedDocument, persistAcceptedDocument } from './documento.js';
+import { readContractForSigning, contractRevision } from './integrity.js';
 import {
   consumeRateLimit,
   getAppUrl,
@@ -20,7 +23,7 @@ import {
 
 function configuredWorkflow(value) {
   const workflow = String(value || '').trim();
-  return workflow && !workflow.startsWith('TU_WORKFLOW') && workflow.length >= 6 ? workflow : null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workflow) ? workflow : null;
 }
 
 async function createDiditSignatureSession(apiKey, payload) {
@@ -33,22 +36,21 @@ async function createDiditSignatureSession(apiKey, payload) {
     },
     body: JSON.stringify(payload)
   };
-  let response = await fetch('https://verification.didit.me/v3/session/', options);
-  if (response.status === 404) response = await fetch('https://api.didit.me/v1/session/', options);
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const errorMsg = data?.message || data?.error || JSON.stringify(data);
-    throw new Error(`Didit rejected the signature session (${response.status}): ${errorMsg}`);
-  }
+  const data = await diditRequest('session/', options);
 
   const sessionId = data.session_id || data.sessionId || data.id;
   const url = data.url || data.session_url || data.verification_url;
-  if (!sessionId || !url) throw new Error('Didit did not return a usable signature session.');
+  const parsedUrl = new URL(url);
+  if (!/^[A-Za-z0-9_-]{6,200}$/.test(sessionId || '') || parsedUrl.protocol !== 'https:' ||
+    !(parsedUrl.hostname === 'didit.me' || parsedUrl.hostname.endsWith('.didit.me'))) {
+    throw new Error('Didit did not return a usable signature session.');
+  }
   return { sessionId: String(sessionId), url: String(url) };
 }
 
 /** Starts a signature session; role and signer identity are always server-derived. */
 export default async function iniciarHandler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
   if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
@@ -70,6 +72,7 @@ export default async function iniciarHandler(req, res) {
     if (contractError) throw contractError;
     if (!contract) return res.status(404).json({ ok: false, error: 'Not Found' });
     if (!role) return sendForbidden(res, 'No eres parte de este contrato.');
+    const contractDetail = await readContractForSigning(supabase, contractId);
     if (!await consumeRateLimit(supabase, 'didit-signature-session', `${profile.id_perfil}:${contractId}`, 5, 60 * 60)) {
       return sendRateLimited(res);
     }
@@ -77,30 +80,55 @@ export default async function iniciarHandler(req, res) {
     const apiKey = String(process.env.DIDIT_API_KEY || '').trim();
     const workflow = configuredWorkflow(process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID);
     const appUrl = getAppUrl();
-    if (!apiKey || !workflow || !appUrl) {
+    if (!apiKey || !workflow || !appUrl || !process.env.TSA_SERVER_URL || !process.env.TSA_SERVER_API_KEY) {
       console.error('[firmas/iniciar] Missing Didit or canonical app configuration.');
-      return res.status(503).json({ ok: false, error: 'Signature service unavailable.' });
+      return res.status(503).json({ ok: false, error: 'Signature service unavailable.', message: 'La firma no está habilitada: falta configurar la verificación o el sellado de tiempo. Contactá al administrador.' });
     }
 
     // A user may not create arbitrary parallel sessions to race a later webhook.
     const { data: existing, error: existingError } = await supabase
       .from('Firma_contrato')
-      .select('id_firma, estado_firma, didit_session_id')
+      .select('id_firma, id_contrato, rol_firmante, estado_firma, didit_session_id, didit_session_url, didit_scores, created_at')
       .eq('id_contrato', contractId)
       .eq('id_perfil_firmante', profile.id_perfil)
-      .in('estado_firma', ['iniciada', 'biometria_pendiente', 'biometria_aprobada'])
+      .in('estado_firma', ['iniciada', 'biometria_pendiente', 'biometria_aprobada', 'sellada', 'completada'])
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (existingError) throw existingError;
     if (existing) {
-      return res.status(409).json({
-        ok: false,
-        error: 'Signature already in progress.',
-        message: 'Ya existe una firma pendiente para este contrato. Espere a que finalice o solicite asistencia.'
-      });
+      if (existing.didit_scores?.document_hash && existing.didit_scores?.contract_revision === contractRevision(contractDetail) &&
+          existing.didit_scores.document_hash !== body.documentHash && !['sellada', 'completada'].includes(existing.estado_firma)) {
+        return res.status(409).json({ ok: false, message: 'Esta sesión corresponde a otro PDF. Revisá el documento aceptado antes de continuar.' });
+      }
+      if (['sellada','completada'].includes(existing.estado_firma) ||
+          (existing.didit_scores?.contract_revision === contractRevision(contractDetail) &&
+           existing.didit_scores?.document_hash === body.documentHash)) {
+        const { didit_scores, ...publicSignature } = existing;
+        return res.status(200).json({ ok: true, data: publicSignature, resumed: true });
+      }
+      const { error } = await supabase.from('Firma_contrato').update({ estado_firma: 'biometria_rechazada', didit_status: 'SUPERSEDED' })
+        .eq('id_firma', existing.id_firma).eq('estado_firma', existing.estado_firma);
+      if (error) throw error;
     }
 
+    const { data: history, error: historyError } = await supabase.from('Historial_Estado_Contrato')
+      .select('id_estado_contrato').eq('id_contrato', contractId).is('fecha_fin', null)
+      .order('fecha_inicio', { ascending: false }).limit(1).maybeSingle();
+    if (historyError) throw historyError;
+    if (Number(history?.id_estado_contrato) !== 5) {
+      return res.status(409).json({ ok: false, message: 'El contrato no está pendiente de firma.' });
+    }
+    const { data: parties, error: partiesError } = await supabase.from('Perfil')
+      .select('id_perfil, nombre_completo, dni, mail').in('id_perfil', [contract.id_perfil_inquilino, contract.id_perfil_propietario]);
+    if (partiesError) throw partiesError;
+    if (parties?.length !== 2 || parties.some(p => !p.nombre_completo?.trim() || !p.dni?.trim() || !p.mail?.trim())) {
+      return res.status(422).json({ ok: false, message: 'Completá nombre, DNI y email de ambas partes antes de firmar.' });
+    }
+
+    const document = await prepareContractDocument(supabase, contractDetail);
+    assertReviewedDocument(document, body.documentHash);
+    await persistAcceptedDocument(supabase, contractId, document);
     const callbackUrl = getSafeCallbackUrl(body.callbackUrl);
     const vendorData = JSON.stringify({
       kind: 'contract_signature',
@@ -108,14 +136,13 @@ export default async function iniciarHandler(req, res) {
       profileId: Number(profile.id_perfil),
       role,
       workflowId: workflow,
-      requiredChecks: ['liveness'],
+      requiredChecks: ['document', 'liveness', 'faceMatch'],
       nonce: crypto.randomUUID()
     });
     const webhookUrl = `${appUrl}/api/firmas/webhook-didit`;
-    const payload = { workflow_id: workflow, vendor_data: vendorData, webhook_url: webhookUrl, webhook: webhookUrl };
+    const payload = { workflow_id: workflow, vendor_data: vendorData, webhook_url: webhookUrl };
     if (callbackUrl) {
-      payload.callback_url = callbackUrl;
-      payload.redirect_url = callbackUrl;
+      payload.callback = callbackUrl;
     }
 
     const didit = await createDiditSignatureSession(apiKey, payload);
@@ -129,6 +156,7 @@ export default async function iniciarHandler(req, res) {
         didit_status: 'PENDING',
         didit_session_id: didit.sessionId,
         didit_session_url: didit.url,
+        didit_scores: { consent_given: true, consent_at: new Date().toISOString(), consent_version: 'contract-signature-v2', contract_revision: document.revision, document_hash: document.hash, document_path: document.path },
         ip_origen: getClientIp(req).slice(0, 128),
         user_agent: String(req.headers['user-agent'] || '').slice(0, 512)
       }])
@@ -149,6 +177,9 @@ export default async function iniciarHandler(req, res) {
       }
     });
   } catch (error) {
+    if (error.code === 'DOCUMENT_CHANGED') return res.status(409).json({ ok: false, message: error.message });
+    if (error.code === 'CONTRACT_INCOMPLETE') return res.status(422).json({ ok: false, message: error.message });
+    if (error.code === '23505') return res.status(409).json({ ok: false, message: 'Otra solicitud ya inició esta firma. Volvé a intentarlo para retomarla.' });
     return sendInternalError(res, 'firmas/iniciar', error);
   }
 }

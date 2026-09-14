@@ -10,9 +10,11 @@ import {
   sendUnauthorized,
   setCorsHeaders
 } from '../../api/_auth.js';
+import { refreshSignature } from './didit.js';
 
 /** Returns only the authenticated signer's server-authoritative signature state. */
 export default async function estadoHandler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
   if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
@@ -26,9 +28,9 @@ export default async function estadoHandler(req, res) {
     if (!signatureId) return res.status(400).json({ ok: false, error: 'Invalid signature id.' });
 
     const supabase = getSupabaseAdmin();
-    const { data: signature, error } = await supabase
+    let { data: signature, error } = await supabase
       .from('Firma_contrato')
-      .select('id_firma, id_contrato, id_perfil_firmante, rol_firmante, estado_firma, didit_status, fecha_firma')
+      .select('*')
       .eq('id_firma', signatureId)
       .maybeSingle();
     if (error) throw error;
@@ -40,6 +42,12 @@ export default async function estadoHandler(req, res) {
       return sendForbidden(res, 'No puedes consultar esta firma.');
     }
 
+    if (!['sellada', 'completada', 'biometria_rechazada'].includes(signature.estado_firma)) {
+      const refreshedAt = Date.parse(signature.didit_scores?.processed_at || '');
+      if (!Number.isFinite(refreshedAt) || Date.now() - refreshedAt >= 5000) {
+        signature = await refreshSignature(supabase, signature);
+      }
+    }
     return res.status(200).json({
       ok: true,
       data: {

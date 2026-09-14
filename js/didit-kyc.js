@@ -95,11 +95,22 @@
       frame.setAttribute('allow', 'camera; microphone; display-capture; autoplay; clipboard-write; fullscreen');
       frame.setAttribute('referrerpolicy', 'strict-origin');
       modal.appendChild(frame);
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.textContent = 'Volver al contrato';
+      close.style.cssText = 'position:absolute;right:16px;top:16px;padding:10px 16px;border:1px solid #d4d4d8;border-radius:8px;background:white;color:#18181b;font:500 14px system-ui;cursor:pointer;';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-label', 'Verificación de identidad con Didit');
+      modal.appendChild(close);
+      const previousFocus = document.activeElement;
       document.body.appendChild(modal);
+      close.focus();
 
       let completed = false;
       let attempts = 0;
       let timer = null;
+      let polling = false;
       const getServerDecision = typeof options.fetchDecision === 'function'
         ? options.fetchDecision
         : () => fetchSessionDecision(sessionId, options);
@@ -109,20 +120,26 @@
         completed = true;
         if (timer) clearTimeout(timer);
         window.removeEventListener('message', messageHandler);
+        window.removeEventListener('keydown', keyHandler);
         modal.remove();
+        previousFocus?.focus();
         resolve(decision || { status: 'IN_PROGRESS', sessionId });
       };
 
       const poll = async (immediate = false) => {
-        if (completed) return;
+        if (completed || polling) return;
+        polling = true;
         attempts += 1;
         let decision = null;
         try {
           decision = await getServerDecision();
         } catch (error) {
           console.warn('[Didit KYC] No se pudo consultar la decisión del servidor:', error.message);
+        } finally {
+          polling = false;
         }
-        if (decision && ['APPROVED', 'DECLINED'].includes(decision.status)) {
+        if (completed) return;
+        if (decision && ['APPROVED', 'DECLINED', 'REVIEW_REQUIRED'].includes(decision.status)) {
           finish({ ...decision, sessionId });
           return;
         }
@@ -141,6 +158,10 @@
         if (timer) clearTimeout(timer);
         poll(true);
       };
+
+      const keyHandler = event => { if (event.key === 'Escape') finish({ status: 'IN_PROGRESS', sessionId, cancelled: true }); };
+      close.onclick = () => finish({ status: 'IN_PROGRESS', sessionId, cancelled: true });
+      window.addEventListener('keydown', keyHandler);
 
       window.addEventListener('message', messageHandler);
       timer = window.setTimeout(() => poll(false), 2_500);

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { assertDocumentHash, uploadImmutable } from './integrity.js';
 import { mergeFinalContractPdf } from './pdf-generator.js';
 import {
   getAuthenticatedUser,
@@ -42,7 +43,7 @@ async function activateContract(supabase, contractId) {
 
 async function getCurrentContractState(supabase, contractId) {
   const { data: history, error } = await supabase
-    .from('Historial_estado_contrato')
+    .from('Historial_Estado_Contrato')
     .select('id_estado_contrato, fecha_fin')
     .eq('id_contrato', contractId)
     .is('fecha_fin', null)
@@ -64,13 +65,14 @@ function assertContractCanFinalize(currentState, hasFinalDocument) {
   throw conflict;
 }
 
-async function generateFinalDocument(supabase, contract, tenantSignature, ownerSignature) {
+async function generateFinalDocument(supabase, contract, tenantSignature, ownerSignature, guarantorSignatures = []) {
   const contractId = Number(contract.id_contrato);
   if (contract.hash_final_sha256 && isAllowedDocumentPath(contract.url_contrato_final_pdf, contractId)) {
     return { path: contract.url_contrato_final_pdf, hash: contract.hash_final_sha256 };
   }
 
-  const required = [contract.url_contrato_original_pdf, tenantSignature.url_audit_trail_pdf, ownerSignature.url_audit_trail_pdf];
+  const required = [contract.url_contrato_original_pdf, tenantSignature.url_audit_trail_pdf, ownerSignature.url_audit_trail_pdf,
+    ...guarantorSignatures.map(s => s.url_audit_trail_pdf)];
   if (!required.every((path) => isAllowedDocumentPath(path, contractId))) {
     throw new Error('Required immutable signature documents are unavailable.');
   }
@@ -81,39 +83,53 @@ async function generateFinalDocument(supabase, contract, tenantSignature, ownerS
     buffers.push(Buffer.from(await data.arrayBuffer()));
   }
 
+  assertDocumentHash(buffers[0], contract.hash_original_sha256);
+  assertDocumentHash(buffers[1], tenantSignature.hash_audit_trail_sha256);
+  assertDocumentHash(buffers[2], ownerSignature.hash_audit_trail_sha256);
+  guarantorSignatures.forEach((signature, index) => {
+    assertDocumentHash(buffers[index + 3], signature.hash_audit_trail_sha256);
+    if (signature.hash_original_sha256 !== contract.hash_original_sha256) throw new Error('Guarantor signed a different document.');
+  });
+  if (tenantSignature.hash_original_sha256 !== contract.hash_original_sha256 || ownerSignature.hash_original_sha256 !== contract.hash_original_sha256) {
+    throw new Error('The parties did not sign the same document.');
+  }
   const { finalPdfBytes, finalPdfHash } = await mergeFinalContractPdf({
     originalPdfBytes: buffers[0],
     inquilinoAuditBytes: buffers[1],
     propietarioAuditBytes: buffers[2],
-    garantesAuditBytes: []
+    garantesAuditBytes: buffers.slice(3)
   });
   const calculatedHash = crypto.createHash('sha256').update(finalPdfBytes).digest('hex');
   if (calculatedHash !== finalPdfHash) throw new Error('Final document integrity check failed.');
 
-  const path = contractPath(contractId, 'contrato_final_consolidado.pdf');
-  const { error: uploadError } = await supabase.storage.from('contratos_firmados').upload(path, finalPdfBytes, {
-    contentType: 'application/pdf',
-    upsert: false
-  });
-  if (uploadError) throw uploadError;
+  const path = contractPath(contractId, `contrato_final_${finalPdfHash}.pdf`);
+  await uploadImmutable(supabase, path, finalPdfBytes);
 
-  const { error: updateError } = await supabase
+  const { data: saved, error: updateError } = await supabase
     .from('Contrato')
     .update({ hash_final_sha256: finalPdfHash, url_contrato_final_pdf: path })
     .eq('id_contrato', contractId)
-    .is('hash_final_sha256', null);
+    .is('hash_final_sha256', null).select('hash_final_sha256, url_contrato_final_pdf').maybeSingle();
   if (updateError) throw updateError;
+  if (!saved) {
+    const { data: winner, error } = await supabase.from('Contrato')
+      .select('hash_final_sha256, url_contrato_final_pdf').eq('id_contrato', contractId).single();
+    if (error || !winner.hash_final_sha256) throw error || new Error('Final document was not saved.');
+    return { path: winner.url_contrato_final_pdf, hash: winner.hash_final_sha256 };
+  }
 
-  await supabase
+  const { error: signatureUpdateError } = await supabase
     .from('Firma_contrato')
     .update({ hash_contrato_sha256: finalPdfHash, url_contrato_final_pdf: path })
     .eq('id_contrato', contractId)
-    .in('id_firma', [tenantSignature.id_firma, ownerSignature.id_firma]);
+    .in('id_firma', [tenantSignature.id_firma, ownerSignature.id_firma, ...guarantorSignatures.map(s => s.id_firma)]);
+  if (signatureUpdateError) throw signatureUpdateError;
 
   return { path, hash: finalPdfHash };
 }
 
 export default async function finalizarHandler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
   if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
@@ -142,14 +158,27 @@ export default async function finalizarHandler(req, res) {
 
     const { data: signatures, error: signaturesError } = await supabase
       .from('Firma_contrato')
-      .select('id_firma, id_perfil_firmante, rol_firmante, estado_firma, didit_status, fecha_firma, hash_contrato_sha256, url_audit_trail_pdf')
+      .select('id_firma, id_perfil_firmante, rol_firmante, estado_firma, didit_status, fecha_firma, hash_contrato_sha256, hash_original_sha256, hash_audit_trail_sha256, url_audit_trail_pdf')
       .eq('id_contrato', contractId)
       .order('created_at', { ascending: true });
     if (signaturesError) throw signaturesError;
 
-    const tenantSignature = (signatures || []).find((item) => item.rol_firmante === 'inquilino' && isSealed(item));
-    const ownerSignature = (signatures || []).find((item) => item.rol_firmante === 'propietario' && isSealed(item));
-    const complete = Boolean(tenantSignature && ownerSignature);
+    const tenantSignature = (signatures || []).find((item) => item.rol_firmante === 'inquilino' && Number(item.id_perfil_firmante) === Number(participantContract.id_perfil_inquilino) && isSealed(item));
+    const ownerSignature = (signatures || []).find((item) => item.rol_firmante === 'propietario' && Number(item.id_perfil_firmante) === Number(participantContract.id_perfil_propietario) && isSealed(item));
+    // A bilateral signature must not silently finalize a contract whose text
+    // also binds guarantors. Their signing portal is a separate prerequisite.
+    const { data: passports, error: passportError } = await supabase.from('Pasaporte_vivat')
+      .select('id_pasaporte').eq('id_perfil', participantContract.id_perfil_inquilino);
+    if (passportError) throw passportError;
+    const passportIds = (passports || []).map(p => p.id_pasaporte);
+    const { data: guarantors, error: guarantorError } = passportIds.length
+      ? await supabase.from('Garante').select('id_garante, id_perfil').in('id_pasaporte', passportIds)
+      : { data: [] };
+    if (guarantorError) throw guarantorError;
+    const guarantorSignatures = (guarantors || []).map(g => (signatures || []).find(s =>
+      g.id_perfil && Number(s.id_perfil_firmante) === Number(g.id_perfil) && s.rol_firmante === 'garante' && isSealed(s)));
+    const pendingGuarantors = guarantorSignatures.filter(s => !s).length;
+    const complete = Boolean(tenantSignature && ownerSignature && pendingGuarantors === 0);
 
     let finalDocument = contract.hash_final_sha256 && isAllowedDocumentPath(contract.url_contrato_final_pdf, contractId)
       ? { path: contract.url_contrato_final_pdf, hash: contract.hash_final_sha256 }
@@ -160,9 +189,10 @@ export default async function finalizarHandler(req, res) {
     // from an authenticated contract participant.
     if (req.method === 'POST' && complete) {
       assertContractCanFinalize(currentState, Boolean(finalDocument));
-      finalDocument = await generateFinalDocument(supabase, contract, tenantSignature, ownerSignature);
-      await activateContract(supabase, contractId);
-      currentState = 1;
+      finalDocument = await generateFinalDocument(supabase, contract, tenantSignature, ownerSignature, guarantorSignatures);
+      const activated = await activateContract(supabase, contractId);
+      currentState = await getCurrentContractState(supabase, contractId);
+      if (!activated || currentState !== 1) throw new Error('Contract activation was not confirmed.');
     }
 
     const isActive = currentState === 1 && complete && Boolean(finalDocument);
@@ -181,7 +211,8 @@ export default async function finalizarHandler(req, res) {
         contrato_activo: isActive,
         estado_general: isActive
           ? 'completado_activo'
-          : (complete ? (finalDocument ? 'firmas_completas_estado_no_activo' : 'pendiente_documento_final') : 'pendiente_firmas'),
+          : (pendingGuarantors ? 'pendiente_firma_garantes' : complete ? (finalDocument ? 'firmas_completas_estado_no_activo' : 'pendiente_documento_final') : 'pendiente_firmas'),
+        pendientes_garantes: pendingGuarantors,
         hash_original_sha256: contract.hash_original_sha256 || null,
         hash_final_sha256: finalDocument?.hash || null,
         resumen_firmas: {
