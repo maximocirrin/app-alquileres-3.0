@@ -52,10 +52,10 @@
             } catch (e) { }
         })();
     </script>
-    <title>Inmobiliarias y Corredores Matriculados | Plataforma y CRM Vivat</title>
+    <title>CRM inmobiliario para alquileres | Vivat para corredores</title>
     
     <!-- Metadatos SEO y Redes Sociales (WhatsApp, Facebook, Twitter) -->
-    <meta name="description" content="Soluciones tecnológicas y CRM para inmobiliarias y corredores matriculados en Argentina. Publicá en la red Vivat, gestioná contratos digitales y acelerá tus alquileres.">
+    <meta name="description" content="Centralizá cartera, postulaciones, visitas, contratos, cobros, mantenimiento y operaciones compartidas en el CRM inmobiliario de Vivat.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://vivat.com.ar/corredores.html">
 
@@ -63,8 +63,8 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Vivat">
     <meta property="og:url" content="https://vivat.com.ar/corredores.html">
-    <meta property="og:title" content="Inmobiliarias y Corredores Matriculados | Vivat">
-    <meta property="og:description" content="Plataforma tecnológica y CRM para inmobiliarias. Contratos digitales, calificación de inquilinos y red colaborativa.">
+    <meta property="og:title" content="CRM inmobiliario para alquileres | Vivat">
+    <meta property="og:description" content="Gestioná cartera, candidatos, visitas, contratos, cobros y mantenimiento desde un solo panel.">
     <meta property="og:image" content="https://vivat.com.ar/img/og-vivat.png">
     <meta property="og:image:secure_url" content="https://vivat.com.ar/img/og-vivat.png">
     <meta property="og:image:type" content="image/png">
@@ -76,8 +76,8 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://vivat.com.ar/corredores.html">
-    <meta name="twitter:title" content="Inmobiliarias y Corredores Matriculados | Vivat">
-    <meta name="twitter:description" content="Plataforma tecnológica y CRM para inmobiliarias y corredores matriculados.">
+    <meta name="twitter:title" content="CRM inmobiliario para alquileres | Vivat">
+    <meta name="twitter:description" content="Gestioná cartera, candidatos, visitas, contratos, cobros y mantenimiento desde un solo panel.">
     <meta name="twitter:image" content="https://vivat.com.ar/img/og-vivat.png">
 
     <!-- Fallback WhatsApp / motores de previsualización -->
@@ -98,7 +98,8 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
-    <link rel="stylesheet" href="css/style.css?v=14">
+    <link rel="stylesheet" href="css/style.css?v=22">
+    <script defer src="js/landing-motion.js?v=4"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -195,19 +196,18 @@
 </head>
 
 <body id="landing-corredores-view"
-    class="antialiased bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body">
+    class="landing-premium landing-broker antialiased bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body">
     <!-- TopNavBar Component -->
     <script src="js/navbar.js?v=4"></script>
 
     <main class="pt-16 lg:pt-20 pb-20">
 
         <!-- Hero Section -->
-        <section
-            class="relative min-h-[560px] lg:min-h-[620px] flex flex-col items-center justify-center overflow-hidden pt-10 pb-24 sm:pt-12 sm:pb-28 bg-[#09090b]">
+        <section class="premium-hero premium-hero--broker">
             <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 <img alt="Vivat para Inmobiliarias"
                     class="w-full h-full object-cover object-center scale-[1.02] transform-gpu brightness-[0.70] dark:brightness-[0.55] filter contrast-[1.05]"
-                    src="img/hero-marketplace.jpg" />
+                    src="img/hero-marketplace.webp" width="1024" height="572" fetchpriority="high" decoding="async" />
                 <!-- Cinematic gradient vignette -->
                 <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-[#09090b]/95"></div>
             </div>
@@ -218,7 +218,7 @@
             </div>
 
             <!-- Persona Selector (Segmented Pill) -->
-            <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
+            <div class="premium-persona-nav relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
                 <nav class="inline-flex items-center p-1 rounded-full bg-black/40 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-lg" aria-label="Seleccionar perfil">
                     <a href="index.html"
                         class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
@@ -228,89 +228,100 @@
                         class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
                         Soy Propietario
                     </a>
-                    <a href="corredores.html"
+                    <a href="corredores.html" aria-current="page"
                         class="bg-primary text-white px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-bold shadow-sm whitespace-nowrap transition-all duration-200">
                         Soy Inmobiliaria
                     </a>
                 </nav>
             </div>
 
-            <div class="relative z-10 w-full max-w-4xl px-4 sm:px-6 text-center">
+            <div class="premium-hero-content relative z-10 w-full max-w-5xl px-4 sm:px-6 text-center">
+                <span class="premium-eyebrow">Vivat para inmobiliarias</span>
                 <h1
-                    class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-extrabold text-white mb-4 sm:mb-5 tracking-[-0.03em] leading-[1.1] animate-on-scroll">
-                    El CRM transaccional que multiplica tu capacidad operativa.
+                    class="premium-hero-title font-headline text-white animate-on-scroll">
+                    Más capacidad para operar.<br><span>La misma atención de siempre.</span>
                 </h1>
-                <div
-                    class="font-body text-base sm:text-lg md:text-xl text-zinc-200/90 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal animate-on-scroll delay-100">
-                    Infraestructura LegalTech diseñada para escalar tu negocio. Automatizá cobros, firmas y gestión, manteniendo tu autonomía profesional y cumpliendo con tu Colegio.
-                </div>
+                <p class="premium-hero-lede font-body text-zinc-200/90 max-w-2xl mx-auto animate-on-scroll delay-100">
+                    Vivat conecta cartera, candidatos, contratos, cobranzas y equipo para que cada persona sepa qué
+                    sigue y cada operación avance.
+                </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-on-scroll delay-200">
                     <a href="panel-corredor.html"
                         class="bg-primary hover:bg-[#9a2226] text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-primary/25 active:scale-95 inline-flex items-center justify-center gap-2 w-full sm:w-auto text-center">
-                        <span>Comenzá tu prueba gratis</span>
+                        <span>Ingresá al panel de corredor</span>
                         <span class="material-symbols-outlined text-lg sm:text-xl">arrow_forward</span>
                     </a>
-                    <a href="panel-corredor.html"
+                    <a href="#funciones-corredor"
                         class="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 px-7 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all duration-200 shadow-sm active:scale-95 inline-flex items-center justify-center gap-2 w-full sm:w-auto text-center">
-                        <span class="material-symbols-outlined text-lg sm:text-xl">play_circle</span>
-                        <span>Ver demo del Panel</span>
+                        <span class="material-symbols-outlined text-lg sm:text-xl">visibility</span>
+                        <span>Conocé las funciones</span>
                     </a>
                 </div>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-zinc-300 font-medium animate-on-scroll delay-300">
                     <span class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-green-400 text-base sm:text-lg">check_circle</span>
-                        Sin tarjeta de crédito
+                        Panel centralizado
                     </span>
                     <span class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-green-400 text-base sm:text-lg">check_circle</span>
-                        Configuración en 5 min
+                        Datos por propiedad
                     </span>
                     <span class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-green-400 text-base sm:text-lg">check_circle</span>
-                        SaaS 100% independiente
+                        Autonomía profesional
                     </span>
                 </div>
             </div>
         </section>
 
-        <!-- Hero Stats Section -->
-        <section class="max-w-[1060px] mx-auto px-4 sm:px-6 relative z-20 mb-20 animate-on-scroll">
-            <div
-                class="-mt-10 sm:-mt-12 relative z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl text-zinc-900 dark:text-zinc-100 rounded-2xl sm:rounded-full px-6 sm:px-10 py-5 sm:py-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 text-center shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-zinc-200/80 dark:border-zinc-800 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200/70 dark:divide-zinc-800/80">
-                <div class="pt-2 sm:pt-0">
-                    <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+10.000</p>
-                    <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Inmobiliarias confían en nosotros</p>
-                </div>
-                <div class="pt-4 sm:pt-0">
-                    <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">15+</p>
-                    <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Portales integrados</p>
-                </div>
-                <div class="pt-4 sm:pt-0">
-                    <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">3.5M</p>
-                    <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Propiedades gestionadas</p>
-                </div>
-            </div>
+        <section class="landing-journey" aria-label="Tu operación inmobiliaria en tres pasos">
+            <ol class="landing-journey-steps">
+                <li>
+                    <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+                    <span class="landing-journey-number" aria-hidden="true">01</span>
+                    <div>
+                        <h3>Conectá tu cartera.</h3>
+                        <p>Propiedades, clientes y equipo en sintonía.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4-1 12-12a2.1 2.1 0 0 0-3-3L5 16zM13 20h7"/></svg></span>
+                    <span class="landing-journey-number" aria-hidden="true">02</span>
+                    <div>
+                        <h3>Hacé avanzar cada operación.</h3>
+                        <p>De la postulación al contrato firmado online.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v4H8zM8 5H5v16h14V5h-3M8 12h8M8 16h5"/></svg></span>
+                    <span class="landing-journey-number" aria-hidden="true">03</span>
+                    <div>
+                        <h3>Seguí cada alquiler.</h3>
+                        <p>Cobros y tareas visibles para todo el equipo.</p>
+                    </div>
+                </li>
+            </ol>
         </section>
 
         <!-- Core Features Section -->
-        <section
-            class="bg-surface-container-low dark:bg-zinc-900 py-24 border-y border-outline-variant/20 dark:border-zinc-800 overflow-hidden">
+        <section id="funciones-corredor"
+            class="broker-premium-overview bg-surface-container-low dark:bg-zinc-900 py-24 border-y border-outline-variant/20 dark:border-zinc-800 overflow-hidden">
             <div class="max-w-[1280px] mx-auto px-4 md:px-8">
                 <div class="text-center mb-20 max-w-2xl mx-auto animate-on-scroll">
                     <span
-                        class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Solución
-                        Integral</span>
+                        class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Operación
+                        conectada</span>
                     <h2
                         class="font-headline text-3xl md:text-5xl font-extrabold text-on-background dark:text-white mb-6">
-                        Todo lo que necesitas en un solo lugar
+                        Una inmobiliaria que no depende de perseguir información.
                     </h2>
                     <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg">
-                        Olvídate de usar múltiples herramientas. Vivat te ofrece las herramientas más avanzadas para
-                        modernizar tu gestión inmobiliaria y multiplicar tus resultados.
+                        Cartera, candidatos, documentación y administración viven en un mismo flujo para que el equipo
+                        pueda concentrarse en mover operaciones.
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="broker-premium-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Feature 1 -->
                     <div
                         class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll">
@@ -318,12 +329,11 @@
                             class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
                             <span class="material-symbols-outlined text-3xl">business</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Tecnología,
-                            no intermediación</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Toda la
+                            cartera, con contexto.</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Somos estrictamente un proveedor SaaS. No operamos como inmobiliaria, no tasamos ni
-                            mostramos propiedades. Tus honorarios los fijás libremente según las normativas de tu
-                            jurisdicción.
+                            Cada propiedad conserva su publicación, estado, contactos y actividad para que nada dependa
+                            de la memoria de una persona.
                         </p>
                     </div>
 
@@ -332,13 +342,13 @@
                         class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-100">
                         <div
                             class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
-                            <span class="material-symbols-outlined text-3xl">description</span>
+                            <span class="material-symbols-outlined text-3xl">person_search</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Contratos
-                            Inteligentes Blindados</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Cada
+                            candidato llega mejor presentado.</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Utilizá modelos estandarizados o subí los tuyos. Configurá montos y plazos en un entorno que
-                            bloquea ediciones libres para evitar cláusulas nulas o abusivas.
+                            El Pasaporte Vivat ordena la información del interesado y la agenda mantiene cada visita
+                            vinculada a su operación.
                         </p>
                     </div>
 
@@ -347,13 +357,13 @@
                         class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-200">
                         <div
                             class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
-                            <span class="material-symbols-outlined text-3xl">payments</span>
+                            <span class="material-symbols-outlined text-3xl">description</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Cobranzas y
-                            Punitorios Automáticos</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Firmas que
+                            avanzan, aunque nadie esté en la oficina.</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            El motor financiero envía recordatorios preventivos. Ante atrasos, bloquea la recepción del
-                            pago original y recalcula la deuda sumando intereses punitorios diarios en tiempo real.
+                            Prepará el contrato y seguí la firma electrónica de propietario, inquilino y garantes con
+                            trazabilidad del proceso.
                         </p>
                     </div>
 
@@ -362,14 +372,13 @@
                         class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll">
                         <div
                             class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
-                            <span class="material-symbols-outlined text-3xl">settings</span>
+                            <span class="material-symbols-outlined text-3xl">payments</span>
                         </div>
                         <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">
-                            Parametrización y Cumplimiento</h3>
+                            La cobranza deja de ser una caja negra.</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Adaptá la plataforma a las reglas de tu provincia. Parametrizá a quién se le cobran los
-                            honorarios y configurá el traslado de los costos de la pasarela de pagos para proteger tus
-                            márgenes.
+                            Pagos, comprobantes, intereses y ajustes por IPC o ICL quedan visibles para el equipo y
+                            vinculados a cada contrato.
                         </p>
                     </div>
 
@@ -378,13 +387,28 @@
                         class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-100">
                         <div
                             class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
-                            <span class="material-symbols-outlined text-3xl">photo_camera</span>
+                            <span class="material-symbols-outlined text-3xl">home_repair_service</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Inventario
-                            Digital Inmutable</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">La gestión
+                            continúa después de entregar las llaves.</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Digitalizá el ciclo de vida del alquiler. Evitá disputas gestionando inventarios mediante
-                            fotos y videos certificados con sellos de tiempo.
+                            El inventario fotográfico y los tickets de mantenimiento sostienen una historia clara del
+                            inmueble durante el contrato.
+                        </p>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div
+                        class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-200">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
+                            <span class="material-symbols-outlined text-3xl">groups</span>
+                        </div>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Más oferta.
+                            La misma identidad profesional.</h3>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
+                            Coordiná a tu equipo y accedé a propiedades compartidas en la Red Vivat sin diluir la
+                            relación con tu cliente.
                         </p>
                     </div>
                 </div>
@@ -392,7 +416,7 @@
         </section>
 
         <!-- Product Preview Section -->
-        <section class="max-w-[1280px] mx-auto px-4 md:px-8 py-24">
+        <section class="broker-network max-w-[1280px] mx-auto px-4 md:px-8 py-24">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div class="order-2 lg:order-1 animate-on-scroll">
                     <div class="relative">
@@ -418,11 +442,11 @@
                 <div class="order-1 lg:order-2 animate-on-scroll delay-100">
                     <h2
                         class="font-headline text-3xl md:text-4xl font-extrabold text-on-background dark:text-white mb-6">
-                        Colaboración y red de contactos a tu alcance
+                        Que una propiedad esté en otra cartera no debería hacerte perder una oportunidad.
                     </h2>
                     <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg mb-8 leading-relaxed">
-                        La Red Vivat es el ecosistema donde miles de corredores inmobiliarios interactúan todos los
-                        días. Si tú tienes al cliente comprador, alguien más tiene la propiedad (y viceversa).
+                        La Red Vivat conecta profesionales para ampliar la oferta, coordinar operaciones y preservar la
+                        identidad comercial frente al cliente.
                     </p>
 
                     <ul class="space-y-6">
@@ -432,10 +456,10 @@
                                 <span class="material-symbols-outlined text-sm">done</span>
                             </div>
                             <div>
-                                <h4 class="font-bold text-on-background dark:text-white text-lg">Busca en inventario
+                                <h4 class="font-bold text-on-background dark:text-white text-lg">Explorá el inventario
                                     compartido</h4>
-                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Filtra miles de propiedades disponibles
-                                    para compartir comisión entre colegas de confianza.</p>
+                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Recorré las propiedades disponibles en
+                                    la Red Vivat y accedé al detalle de cada inmueble.</p>
                             </div>
                         </li>
                         <li class="flex gap-4">
@@ -444,9 +468,9 @@
                                 <span class="material-symbols-outlined text-sm">done</span>
                             </div>
                             <div>
-                                <h4 class="font-bold text-on-background dark:text-white text-lg">Chat integrado</h4>
-                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Comunícate de forma segura y directa
-                                    con el corredor captador para coordinar visitas rápidamente.</p>
+                                <h4 class="font-bold text-on-background dark:text-white text-lg">Contactá al colega</h4>
+                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Identificá al profesional responsable y
+                                    coordiná la consulta o la visita sobre una base compartida.</p>
                             </div>
                         </li>
                         <li class="flex gap-4">
@@ -456,8 +480,8 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-on-background dark:text-white text-lg">Fichas ciegas</h4>
-                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Envía la propiedad de un colega a tu
-                                    cliente con tu propio logo y datos de contacto, manteniendo el profesionalismo.</p>
+                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Compartí la propiedad con tu cliente sin
+                                    exponer los datos de captación y conservá tu identidad comercial.</p>
                             </div>
                         </li>
                     </ul>
@@ -465,81 +489,65 @@
             </div>
         </section>
 
-        <!-- Testimonial Section -->
-        <section class="bg-primary text-on-primary py-24 relative overflow-hidden">
+        <!-- Operational Value Section -->
+        <section class="broker-manifesto bg-primary text-on-primary py-24 relative overflow-hidden">
             <div class="absolute inset-0 opacity-5 mix-blend-overlay"></div>
             <div class="max-w-[1280px] mx-auto px-4 md:px-8 relative z-10 text-center">
-                <span class="material-symbols-outlined text-5xl opacity-40 mb-6 block">format_quote</span>
+                <span class="material-symbols-outlined text-5xl opacity-60 mb-6 block">account_tree</span>
                 <h2 class="font-headline text-2xl md:text-4xl font-semibold leading-relaxed max-w-4xl mx-auto mb-10">
-                    "Desde que implementamos Vivat en nuestra inmobiliaria, nuestras ventas aumentaron un 30% en el
-                    primer trimestre. La posibilidad de centralizar leads y publicar en todos los portales nos ahorra
-                    más de 20 horas a la semana."
+                    Una sola fuente de verdad para saber qué está pasando y quién tiene que actuar.
                 </h2>
-                <div class="flex items-center justify-center gap-4">
-                    <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center font-bold text-xl">
-                        MJ
-                    </div>
-                    <div class="text-left">
-                        <div class="font-bold text-lg">Martín Juárez</div>
-                        <div class="opacity-80 text-sm">Director Comercial, Juárez Propiedades</div>
-                    </div>
-                </div>
+                <p class="font-body text-lg md:text-xl opacity-85 max-w-3xl mx-auto">La información permanece unida a
+                    cada propiedad, incluso cuando la operación cambia de etapa o de responsable.</p>
             </div>
         </section>
 
         <!-- Pricing / CTA Section -->
-        <section class="max-w-[1000px] mx-auto px-4 md:px-8 py-24 text-center animate-on-scroll">
+        <section class="broker-final-cta max-w-[1000px] mx-auto px-4 md:px-8 py-24 text-center animate-on-scroll">
             <h2
                 class="font-headline text-3xl md:text-5xl font-extrabold mb-6 text-on-background dark:text-white tracking-tight">
-                Planes diseñados para tu crecimiento
+                El próximo alquiler puede gestionarse mejor desde el día uno.
             </h2>
             <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg mb-12 max-w-2xl mx-auto">
-                Sin contratos a largo plazo ni costos de implementación. Elige el plan que mejor se adapte al volumen de
-                tu inmobiliaria.
+                Conocé Vivat con tu cartera y descubrí cuánto puede avanzar un equipo cuando todo está conectado.
             </p>
 
             <div
                 class="bg-surface-container-lowest dark:bg-zinc-900 rounded-[32px] p-8 md:p-12 shadow-2xl border border-outline-variant/30 dark:border-zinc-800 relative overflow-hidden">
-                <div
-                    class="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
-                    Más popular
-                </div>
-                <h3 class="font-headline text-2xl font-bold text-on-background dark:text-white mb-2">Plan Inmobiliaria
-                    Pro</h3>
-                <div class="flex items-baseline justify-center gap-1 mb-8">
-                    <span class="text-4xl md:text-5xl font-extrabold text-on-background dark:text-white">$49.990</span>
-                    <span class="text-zinc-500 font-medium">/ mes</span>
-                </div>
+                <h3 class="font-headline text-2xl font-bold text-on-background dark:text-white mb-3">Tu operación,
+                    elevada.</h3>
+                <p class="text-zinc-600 dark:text-zinc-400 mb-8">Una experiencia profesional para el equipo y más
+                    claridad para propietarios e inquilinos.</p>
 
                 <ul class="text-left max-w-md mx-auto space-y-4 mb-10">
                     <li class="flex items-center gap-3 text-zinc-700 dark:text-zinc-300">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
-                        Usuarios y vendedores ilimitados
+                        Panel de indicadores y actividad pendiente
                     </li>
                     <li class="flex items-center gap-3 text-zinc-700 dark:text-zinc-300">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
-                        Hasta 500 propiedades activas
+                        Cartera y publicaciones por estado
                     </li>
                     <li class="flex items-center gap-3 text-zinc-700 dark:text-zinc-300">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
-                        Conexión con +15 portales
+                        Postulaciones, Pasaporte Vivat y visitas
                     </li>
                     <li class="flex items-center gap-3 text-zinc-700 dark:text-zinc-300">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
-                        Sitio web inmobiliario incluido
+                        Contratos, firmas, alquileres y cobranzas
                     </li>
                     <li class="flex items-center gap-3 text-zinc-700 dark:text-zinc-300">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
-                        Soporte técnico prioritario por WhatsApp
+                        Red de colegas, inventario y mantenimiento
                     </li>
                 </ul>
 
                 <a href="panel-corredor.html"
                     class="bg-primary text-on-primary px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-container transition-all shadow-xl hover:scale-105 active:scale-95 inline-block w-full sm:w-auto text-center">
-                    Crear cuenta de Corredor
+                    Ingresar al panel de corredor
                 </a>
-                <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-400">14 días de prueba gratis. Cancela cuando
-                    quieras.</p>
+                <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-400">La plataforma acompaña tu gestión; vos mantenés
+                    la relación profesional y las decisiones de cada operación.</p>
             </div>
         </section>
     </main>
@@ -565,19 +573,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Setup intersection observer for scroll animations
-            const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, observerOptions);
-
-            document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-
             if (window.App && typeof window.App.setupTheme === 'function') {
                 App.setupTheme();
             }
