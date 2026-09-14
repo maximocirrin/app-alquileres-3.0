@@ -627,6 +627,7 @@ var DataManager = {
 
     invalidatePublicMarketplaceCache: function () {
         publicMarketplaceRequests.clear();
+        window.LandingCatalog?.invalidate();
     },
 
     _getPublicMarketplaceRecords: async function (orderBy, maxPool) {
