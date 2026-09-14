@@ -5,6 +5,23 @@
 
     let initialUrl = window.SUPABASE_URL || DEFAULT_SUPABASE_URL;
     let initialKey = window.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+    let publicClient = null;
+
+    // Public listings must not wait for a persisted session refresh or auth lock.
+    // This client always uses the anon role and the existing public RLS policies.
+    window.getPublicSupabaseClient = function () {
+        if (!publicClient && typeof supabase !== 'undefined' && supabase.createClient) {
+            publicClient = supabase.createClient(initialUrl, initialKey, {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false,
+                    storageKey: 'vivat-public-marketplace'
+                }
+            });
+        }
+        return publicClient;
+    };
 
     // Global HTML Escape Utility for XSS Prevention
     window.escapeHtml = function (str) {
@@ -72,6 +89,9 @@
                 const data = await res.json();
                 if (data && data.url && data.key) {
                     if (data.url !== initialUrl || data.key !== initialKey) {
+                        initialUrl = data.url;
+                        initialKey = data.key;
+                        publicClient = null;
                         window.SUPABASE_URL = data.url;
                         window.SUPABASE_ANON_KEY = data.key;
                         if (typeof supabase !== 'undefined' && supabase.createClient) {

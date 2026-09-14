@@ -121,6 +121,7 @@ for (const [route, file] of rootFiles) {
 }
 
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html'), { dotfiles: 'deny' }));
+app.get(['/index.html', '/como-funciona.html'], (_req, res) => res.redirect(308, '/'));
 app.get('/contract', (_req, res) => res.sendFile(path.join(__dirname, 'contract.html'), { dotfiles: 'deny' }));
 app.get(['/contrato', '/contratos'], (_req, res) => res.sendFile(path.join(__dirname, 'contratos.html'), { dotfiles: 'deny' }));
 app.get(/^\/[a-z0-9-]+\.html$/i, (req, res, next) => {

@@ -11174,6 +11174,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 if (typeof window.loadOwnerAvisos === 'function') window.loadOwnerAvisos();
                 if (typeof loadOwnerAvisos === 'function') loadOwnerAvisos();
                 if (typeof renderLandlordAvisos === 'function') renderLandlordAvisos();
+                window.DataManager?.invalidatePublicMarketplaceCache();
                 if (typeof window.syncDbPropertiesForSearch === 'function') window.syncDbPropertiesForSearch();
                 if (typeof window.renderNewListings === 'function') window.renderNewListings();
                 if (typeof window.renderLandingFeaturedProperties === 'function') window.renderLandingFeaturedProperties();

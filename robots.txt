@@ -4,7 +4,6 @@ Allow: /index.html
 Allow: /buscar.html
 Allow: /propietarios.html
 Allow: /pasaporte-vivat.html
-Allow: /como-funciona.html
 Allow: /consultar-valor.html
 Allow: /detalles-garantia.html
 Allow: /corredores.html

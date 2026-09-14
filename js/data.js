@@ -80,6 +80,8 @@ let participantContractsApiPending = null;
 const ownerPaymentsApiCache = new Map();
 let authenticatedProfileCache = null;
 let authenticatedProfilePending = null;
+const publicMarketplaceRequests = new Map();
+const PUBLIC_MARKETPLACE_CACHE_TTL_MS = 30_000;
 
 async function fetchOwnerContractsApi() {
     const now = Date.now();
@@ -623,9 +625,76 @@ var DataManager = {
         };
     },
 
+    invalidatePublicMarketplaceCache: function () {
+        publicMarketplaceRequests.clear();
+    },
+
+    _getPublicMarketplaceRecords: async function (orderBy, maxPool) {
+        const client = window.getPublicSupabaseClient?.();
+        if (!client) throw new Error('El catálogo no está disponible.');
+        const key = `${orderBy}:${maxPool}`;
+        const cached = publicMarketplaceRequests.get(key);
+        if (cached?.client === client && (cached.pending || cached.expiresAt > Date.now())) {
+            return cached.promise;
+        }
+
+        const entry = { client, pending: true, expiresAt: 0 };
+        entry.promise = (async () => {
+            // Only public property details and image URLs; never join private contracts.
+            let query = client.from('Publicacion').select(`
+                id_publicacion, id_propiedad, id_perfil, precio, descripcion,
+                id_moneda, created_at, cantidad_visualizaciones_total,
+                Historial_Estado_Publicacion (
+                    id_estado_publicacion, fecha_inicio, fecha_fin,
+                    Estado_Publicacion (nombre)
+                ),
+                Propiedad (
+                    *, Antiguedad (nombre), Subtipo_propiedad (subtipo),
+                    Barrio (nombre, Departamento (nombre, Provincia (nombre))),
+                    Propiedad_caracteristica (Caracteristica (nombre))
+                ),
+                Multimedia (url_archivo, orden_visualizacion)
+            `);
+            if (orderBy === 'views') {
+                query = query.order('cantidad_visualizaciones_total', { ascending: false, nullsFirst: false });
+            }
+            const { data, error } = await query
+                .order('created_at', { ascending: false })
+                .order('id_publicacion', { ascending: false })
+                .order('orden_visualizacion', { referencedTable: 'Multimedia', ascending: true })
+                .limit(maxPool)
+                .abortSignal(AbortSignal.timeout(8000));
+            if (error) throw error;
+            const records = (data || []).map(pub => this._mapPublicationRecord(pub))
+                .filter(prop => prop.status === 'disponible' || prop.status === 'alquilada');
+            entry.expiresAt = Date.now() + PUBLIC_MARKETPLACE_CACHE_TTL_MS;
+            return records;
+        })();
+        publicMarketplaceRequests.set(key, entry);
+        try {
+            return await entry.promise;
+        } catch (error) {
+            if (publicMarketplaceRequests.get(key) === entry) publicMarketplaceRequests.delete(key);
+            throw error;
+        } finally {
+            entry.pending = false;
+        }
+    },
+
     getPublicMarketplaceProperties: async function (limit = 50, includeAllStatuses = false, filterByUser = false, options = {}) {
         if (!window.supabaseClient) return [];
         try {
+            if (!includeAllStatuses && !filterByUser) {
+                const { orderBy = 'created_at', maxPool = 300, prioritizeAvailable = false } = options || {};
+                const sortBy = ['views', 'visualizaciones'].includes(orderBy) ? 'views' : 'created_at';
+                const poolSize = Math.max(1, Math.min(Number(maxPool) || 300, 1000));
+                const records = await this._getPublicMarketplaceRecords(sortBy, poolSize);
+                // Keep each caller's ordering without mutating the shared cached records.
+                const ordered = prioritizeAvailable
+                    ? [...records.filter(p => p.status === 'disponible'), ...records.filter(p => p.status === 'alquilada')]
+                    : records;
+                return ordered.slice(0, limit);
+            }
             let profileId = null;
             if (filterByUser) {
                 if (window.DataManager && window.DataManager._getOrCreateProfile) {
@@ -767,12 +836,13 @@ var DataManager = {
             return result.slice(0, limit);
         } catch (e) {
             console.error("Error in getPublicMarketplaceProperties:", e);
+            if (options?.throwOnError) throw e;
             return [];
         }
     },
 
     getFeaturedMarketplaceProperties: async function (limit = 8) {
-        return this.getPublicMarketplaceProperties(limit, false, false, { orderBy: 'views', prioritizeAvailable: true });
+        return this.getPublicMarketplaceProperties(limit, false, false, { orderBy: 'views', prioritizeAvailable: true, throwOnError: true });
     },
 
     getUserMarketplaceProperties: async (limit = 100) => {

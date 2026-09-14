@@ -55,6 +55,10 @@
     </script>
 
     <!-- Seguridad y compatibilidad -->
+    <link rel="preconnect" href="https://djhwqttaiggjaxmswggr.supabase.co" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1" as="script">
+    <link rel="preload" href="js/supabaseClient.js" as="script">
+    <link rel="preload" href="js/data.js" as="script">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.4.12/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta name="mobile-web-app-capable" content="yes">
@@ -1156,7 +1160,7 @@
                     <!-- Scroll container -->
                     <div id="landing-featured-properties-grid"
                         class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-2 scrollbar-none scroll-smooth cursor-grab active:cursor-grabbing select-none">
-                        <!-- Populated dynamically -->
+                        <p role="status" class="w-full py-8 text-center text-sm text-zinc-500">Cargando propiedades…</p>
                     </div>
                 </div>
 
@@ -1265,6 +1269,8 @@
                         }
                     } catch (e) {
                         console.warn("Could not fetch DB properties for landing featured row:", e);
+                        grid.innerHTML = '<div class="w-full text-center py-8 text-zinc-500 text-sm">No pudimos cargar las propiedades. <button type="button" class="underline font-bold" onclick="window.renderLandingFeaturedProperties()">Reintentar</button></div>';
+                        return;
                     }
 
                     grid.innerHTML = '';
@@ -1273,7 +1279,7 @@
                         return;
                     }
 
-                    displayProperties.slice(0, 20).forEach(prop => {
+                    displayProperties.slice(0, 20).forEach((prop, index) => {
                         const pVal = prop.price ? Number(prop.price) : 0;
                         const priceFormatted = pVal ? `$${pVal.toLocaleString('es-AR')} / mes` : 'Consultar precio';
                         const card = document.createElement('article');
@@ -1340,7 +1346,7 @@
                             card.innerHTML = `
                             <div>
                                 <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
-                                    <img src="${safeImage}" alt="${safeAddress}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img src="${safeImage}" alt="${safeAddress}" loading="${index < 3 ? 'eager' : 'lazy'}" decoding="async" width="340" height="208" onerror="this.onerror=null;this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     ${isAlquilada ? `
                                         <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
                                             <span class="material-symbols-outlined text-xs">key</span> Alquilada
@@ -1411,9 +1417,14 @@
                         window.FavoritesManager.updateAllHeartIcons();
                     }
                 }
-                window.renderLandingFeaturedProperties = renderLandingFeaturedProperties;
-                document.addEventListener('DOMContentLoaded', renderLandingFeaturedProperties);
-                window.addEventListener('load', renderLandingFeaturedProperties);
+                let featuredRenderPending = null;
+                window.renderLandingFeaturedProperties = function () {
+                    if (!featuredRenderPending) {
+                        featuredRenderPending = renderLandingFeaturedProperties()
+                            .finally(() => { featuredRenderPending = null; });
+                    }
+                    return featuredRenderPending;
+                };
             </script>
 
             <!-- Discovery & Filter Section -->
@@ -2067,7 +2078,7 @@
                             card.innerHTML = `
                                 <div>
                                     <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
-                                        <img src="${safeImage}" alt="${safeAddress}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        <img src="${safeImage}" alt="${safeAddress}" loading="lazy" decoding="async" width="340" height="208" onerror="this.onerror=null;this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         ${isAlquilada ? `
                                             <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
                                                 <span class="material-symbols-outlined text-xs">key</span> Alquilada
@@ -2174,9 +2185,14 @@
                         renderCityPropertiesGrid();
                     }
 
-                    window.initCityPropertiesSection = initCityPropertiesSection;
-                    document.addEventListener('DOMContentLoaded', initCityPropertiesSection);
-                    window.addEventListener('load', initCityPropertiesSection);
+                    let cityRenderPending = null;
+                    window.initCityPropertiesSection = function () {
+                        if (!cityRenderPending) {
+                            cityRenderPending = initCityPropertiesSection()
+                                .finally(() => { cityRenderPending = null; });
+                        }
+                        return cityRenderPending;
+                    };
                 })();
             </script>
 
@@ -2661,6 +2677,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
+    <script>
+        // Start the public catalog before downloading the editor, account and map modules.
+        window.renderLandingFeaturedProperties();
+        window.initCityPropertiesSection();
+    </script>
     <script src="js/lead-monetization.js"></script>
     <script src="js/publish-property.js?v=107"></script>
     <script src="js/app.js?v=107"></script>
