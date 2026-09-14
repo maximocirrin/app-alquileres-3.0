@@ -7,46 +7,81 @@
 
         const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
         const seen = new WeakSet();
+        const pendingElements = new Set();
         const editorialTargets = '.premium-section-heading, .owner-premium-overview > .text-center, #funciones-corredor > div > .text-center, #seccion-garantia > div > h2, .broker-network h2, .broker-manifesto h2, .broker-final-cta > h2';
-        let observer;
+        let observer = null;
 
         function reveal(element) {
-            if (seen.has(element)) return;
+            if (!element || seen.has(element)) return;
             seen.add(element);
+            pendingElements.delete(element);
             observer?.unobserve(element);
             element.classList.remove('landing-reveal-pending');
             element.classList.add('is-visible');
         }
 
-        function configureObserver() {
-            if (!('IntersectionObserver' in window) || preference.matches) return;
-            observer?.disconnect();
-            const inset = window.innerWidth < 700 ? 30 : 20;
+        // Reliable check based on bounding rect (handles iOS Safari momentum scroll & toolbar collapse)
+        function checkPendingVisibility() {
+            if (pendingElements.size === 0) return;
+            const vh = window.innerHeight || document.documentElement?.clientHeight || 800;
+            const threshold = vh + 80;
+            pendingElements.forEach(element => {
+                try {
+                    const rect = element.getBoundingClientRect();
+                    if (rect.top <= threshold && rect.bottom >= -80) {
+                        reveal(element);
+                    }
+                } catch {
+                    reveal(element);
+                }
+            });
+        }
+
+        // Initialize single IntersectionObserver with threshold 0 and positive rootMargin.
+        // Never disconnect on resize, which previously discarded observed elements on iOS Safari toolbar collapse!
+        if ('IntersectionObserver' in window && !preference.matches) {
             observer = new IntersectionObserver(entries => {
                 for (const entry of entries) {
-                    if (entry.isIntersecting) reveal(entry.target);
+                    if (entry.isIntersecting) {
+                        reveal(entry.target);
+                    }
                 }
-            }, { threshold: 0.05, rootMargin: `0px 0px -${inset}px 0px` });
+            }, {
+                threshold: 0,
+                rootMargin: '0px 0px 80px 0px'
+            });
         }
-        configureObserver();
-        window.addEventListener('resize', configureObserver, { passive: true });
 
         // Keep the existing catalog hook compatible with dynamically inserted cards.
         window.marketplaceObserver = {
             observe(element) {
-                if (seen.has(element)) return;
+                if (!element || seen.has(element)) return;
                 const excluded = element.closest('.premium-hero, .premium-proof-rail, .landing-journey, #landing-featured-properties-section');
-                const initialViewport = element.getBoundingClientRect().top < window.innerHeight + 24;
-                if (!observer || preference.matches || excluded || initialViewport || !element.closest('main')) {
-                    seen.add(element);
-                    element.classList.add('is-visible');
+                const vh = window.innerHeight || document.documentElement?.clientHeight || 800;
+                let isNearViewport = false;
+                try {
+                    isNearViewport = element.getBoundingClientRect().top < vh + 60;
+                } catch { }
+
+                if (!observer || preference.matches || excluded || isNearViewport || !element.closest('main')) {
+                    reveal(element);
                     return;
                 }
+
                 element.classList.add('landing-reveal-pending');
+                pendingElements.add(element);
                 observer.observe(element);
             },
-            unobserve(element) { observer?.unobserve(element); },
-            disconnect() { observer?.disconnect(); }
+            unobserve(element) {
+                if (!element) return;
+                pendingElements.delete(element);
+                observer?.unobserve(element);
+            },
+            disconnect() {
+                observer?.disconnect();
+                pendingElements.forEach(reveal);
+                pendingElements.clear();
+            }
         };
 
         document.querySelectorAll(editorialTargets).forEach(element => element.classList.add('animate-on-scroll'));
@@ -55,14 +90,45 @@
         // Keyboard navigation and a changed OS preference always take priority over motion.
         document.addEventListener('focusin', event => {
             const element = event.target.closest('.animate-on-scroll');
-            if (!element) return;
-            reveal(element);
+            if (element) reveal(element);
         });
+
         preference.addEventListener?.('change', () => {
             if (!preference.matches) return;
             window.marketplaceObserver.disconnect();
-            document.querySelectorAll('.animate-on-scroll').forEach(el => el.classList.add('is-visible'));
+            document.querySelectorAll('.animate-on-scroll').forEach(reveal);
         });
+
+        // Multi-layer scroll & resize fallback for mobile (iOS Safari momentum scrolling & dynamic toolbars)
+        let ticking = false;
+        const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb => setTimeout(cb, 16));
+        const onScrollOrResize = () => {
+            if (pendingElements.size === 0) return;
+            if (!ticking) {
+                raf(() => {
+                    checkPendingVisibility();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
+        window.addEventListener('scroll', onScrollOrResize, { passive: true });
+        window.addEventListener('touchmove', onScrollOrResize, { passive: true });
+        window.addEventListener('resize', onScrollOrResize, { passive: true });
+        window.addEventListener('orientationchange', onScrollOrResize, { passive: true });
+
+        // Initial layout settling passes
+        raf(checkPendingVisibility);
+        setTimeout(checkPendingVisibility, 300);
+
+        // Absolute safety timer: ensure no element is ever stuck invisible
+        setTimeout(() => {
+            if (pendingElements.size > 0) {
+                pendingElements.forEach(reveal);
+                pendingElements.clear();
+            }
+        }, 1200);
         // Auto-advancing landing journey carousel on mobile with desktop-matching active effect
         document.querySelectorAll('.landing-journey').forEach(journey => {
             const steps = journey.querySelector('.landing-journey-steps');

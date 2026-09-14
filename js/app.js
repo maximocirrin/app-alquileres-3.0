@@ -356,6 +356,19 @@ window.resolvePostalCode = function (address, provincia, ciudad, googlePostalCod
 // Favorites Manager System
 window.FavoritesManager = {
     // Synchronously populate from localStorage at declaration so icons are immediate from millisecond zero
+    favoritesOrder: (function () {
+        try {
+            const raw = localStorage.getItem('vivat_favorites');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    return parsed.map(Number).filter(n => n && !isNaN(n));
+                }
+            }
+        } catch (e) { }
+        return [];
+    })(),
+
     favoritesSet: (function () {
         const s = new Set();
         try {
@@ -372,6 +385,27 @@ window.FavoritesManager = {
         } catch (e) { }
         return s;
     })(),
+
+    getOrderedIds: function () {
+        if (Array.isArray(this.favoritesOrder) && this.favoritesOrder.length > 0) {
+            return [...this.favoritesOrder];
+        }
+        return Array.from(this.favoritesSet);
+    },
+
+    setOrderedIds: function (ids) {
+        const cleanIds = [];
+        const seen = new Set();
+        (ids || []).forEach(raw => {
+            const n = Number(raw);
+            if (n && !isNaN(n) && !seen.has(n)) {
+                seen.add(n);
+                cleanIds.push(n);
+            }
+        });
+        this.favoritesOrder = cleanIds;
+        this.favoritesSet = new Set(cleanIds);
+    },
 
     _authListenerAttached: false,
     _delegatesAttached: false,
@@ -407,21 +441,18 @@ window.FavoritesManager = {
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
-                    parsed.forEach(id => {
-                        const n = Number(id);
-                        if (n && !isNaN(n)) window.FavoritesManager.favoritesSet.add(n);
-                    });
+                    this.setOrderedIds(parsed);
                 }
             }
         } catch (e) { }
 
         // Update UI immediately with current state
-        window.FavoritesManager.updateAllHeartIcons();
-        window.FavoritesManager._setupGlobalDelegates();
+        this.updateAllHeartIcons();
+        this._setupGlobalDelegates();
 
         // Listen for Supabase auth state changes to auto-sync favorites when user logs in/out
-        if (window.supabaseClient && !window.FavoritesManager._authListenerAttached) {
-            window.FavoritesManager._authListenerAttached = true;
+        if (window.supabaseClient && !this._authListenerAttached) {
+            this._authListenerAttached = true;
             try {
                 window.supabaseClient.auth.onAuthStateChange((event) => {
                     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
@@ -431,37 +462,44 @@ window.FavoritesManager = {
             } catch (e) { }
         }
 
-        await window.FavoritesManager.syncWithDatabase();
+        await this.syncWithDatabase();
     },
 
     syncWithDatabase: async function () {
         if (!window.supabaseClient) return;
         try {
-            const profileId = await window.FavoritesManager._resolveProfileId();
+            const profileId = await this._resolveProfileId();
             if (!profileId) return;
 
-            // Fetch DB favorites for this user
+            // Fetch DB favorites for this user ordered by created_at DESC (newest first, oldest last)
             const { data: favs, error } = await window.supabaseClient
                 .from('Favorito')
-                .select('id_publicacion')
-                .eq('id_perfil', profileId);
+                .select('id_publicacion, created_at')
+                .eq('id_perfil', profileId)
+                .order('created_at', { ascending: false });
 
             if (error) {
                 console.warn("Error fetching favorites from DB:", error);
                 return;
             }
 
-            const dbIds = new Set((favs || []).map(f => Number(f.id_publicacion)).filter(Boolean));
+            const dbIds = (favs || []).map(f => Number(f.id_publicacion)).filter(Boolean);
+            const dbIdsSet = new Set(dbIds);
 
-            // Merge DB favorites into current set
-            dbIds.forEach(id => window.FavoritesManager.favoritesSet.add(id));
+            // Keep any local favorites that were saved offline or before login
+            const currentOrdered = this.getOrderedIds();
+            const localOnly = currentOrdered.filter(id => !dbIdsSet.has(id));
+
+            // Merge order: newest local favorites first, then DB favorites sorted newest first
+            const mergedOrder = [...localOnly, ...dbIds];
+            this.setOrderedIds(mergedOrder);
 
             // Push any local favorites that were saved offline or before login
-            const missingInDb = Array.from(window.FavoritesManager.favoritesSet).filter(id => !dbIds.has(id));
-            if (missingInDb.length > 0) {
-                const rows = missingInDb.map(pubId => ({
+            if (localOnly.length > 0) {
+                const rows = localOnly.map(pubId => ({
                     id_perfil: profileId,
-                    id_publicacion: pubId
+                    id_publicacion: pubId,
+                    created_at: new Date().toISOString()
                 }));
                 const { error: insErr } = await window.supabaseClient
                     .from('Favorito')
@@ -471,8 +509,8 @@ window.FavoritesManager = {
                 }
             }
 
-            window.FavoritesManager.saveLocal();
-            window.FavoritesManager.updateAllHeartIcons();
+            this.saveLocal();
+            this.updateAllHeartIcons();
         } catch (err) {
             console.warn("Error in syncWithDatabase:", err);
         }
@@ -480,7 +518,7 @@ window.FavoritesManager = {
 
     saveLocal: function () {
         try {
-            const arr = Array.from(window.FavoritesManager.favoritesSet);
+            const arr = this.getOrderedIds();
             localStorage.setItem('vivat_favorites', JSON.stringify(arr));
         } catch (e) { }
     },
@@ -488,7 +526,7 @@ window.FavoritesManager = {
     isFavorite: function (id_publicacion) {
         const n = Number(id_publicacion);
         if (!n || isNaN(n)) return false;
-        return window.FavoritesManager.favoritesSet.has(n);
+        return this.favoritesSet.has(n);
     },
 
     toggleFavorite: async function (id_publicacion, event = null) {
@@ -500,17 +538,20 @@ window.FavoritesManager = {
         const pubId = Number(id_publicacion);
         if (!pubId || isNaN(pubId)) return false;
 
-        const isFav = window.FavoritesManager.isFavorite(pubId);
+        const isFav = this.isFavorite(pubId);
 
         // Optimistic UI state update immediately
         if (isFav) {
-            window.FavoritesManager.favoritesSet.delete(pubId);
+            this.favoritesSet.delete(pubId);
+            this.favoritesOrder = (this.favoritesOrder || []).filter(id => id !== pubId);
         } else {
-            window.FavoritesManager.favoritesSet.add(pubId);
+            this.favoritesSet.add(pubId);
+            // Insert at index 0 (newest favorite first, oldest last)
+            this.favoritesOrder = [pubId, ...(this.favoritesOrder || []).filter(id => id !== pubId)];
         }
 
-        window.FavoritesManager.saveLocal();
-        window.FavoritesManager.updateAllHeartIcons();
+        this.saveLocal();
+        this.updateAllHeartIcons();
 
         // If inside favorites modal, smoothly handle removal
         const modal = document.getElementById('favorites-modal');
@@ -554,7 +595,7 @@ window.FavoritesManager = {
         // Sync with Supabase database
         if (window.supabaseClient) {
             try {
-                const profileId = await window.FavoritesManager._resolveProfileId();
+                const profileId = await this._resolveProfileId();
                 if (profileId) {
                     if (isFav) {
                         const { error } = await window.supabaseClient
@@ -568,7 +609,8 @@ window.FavoritesManager = {
                             .from('Favorito')
                             .upsert([{
                                 id_perfil: profileId,
-                                id_publicacion: pubId
+                                id_publicacion: pubId,
+                                created_at: new Date().toISOString()
                             }], { onConflict: 'id_perfil,id_publicacion' });
                         if (error) console.warn("Error saving favorite to DB:", error);
                     }
@@ -675,10 +717,16 @@ window.FavoritesManager = {
     },
 
     showFavoritesModal: async function () {
-        const favIds = Array.from(window.FavoritesManager.favoritesSet);
+        if (window.supabaseClient) {
+            try {
+                await window.FavoritesManager.syncWithDatabase();
+            } catch (e) { }
+        }
+
+        const favIds = window.FavoritesManager.getOrderedIds();
 
         let allProperties = [];
-        if (window.DataManager && typeof window.DataManager.getPublicMarketplaceProperties === 'function') {
+        if (favIds.length > 0 && window.DataManager && typeof window.DataManager.getPublicMarketplaceProperties === 'function') {
             try {
                 allProperties = await window.DataManager.getPublicMarketplaceProperties(100, true);
             } catch (e) { }
@@ -730,6 +778,28 @@ window.FavoritesManager = {
                 console.warn("Could not fetch missing favorites:", e);
             }
         }
+
+        // De-duplicate in case of duplicate IDs
+        const seenPubIds = new Set();
+        favProperties = favProperties.filter(p => {
+            const id = Number(p.id || p.id_publicacion);
+            if (!id || seenPubIds.has(id)) return false;
+            seenPubIds.add(id);
+            return true;
+        });
+
+        // Strictly sort favProperties according to favIds order:
+        // favIds[0] is the most recently added favorite (shown first)
+        // favIds[favIds.length - 1] is the earliest added favorite (shown last)
+        favProperties.sort((a, b) => {
+            const idA = Number(a.id || a.id_publicacion);
+            const idB = Number(b.id || b.id_publicacion);
+            const idxA = favIds.indexOf(idA);
+            const idxB = favIds.indexOf(idB);
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+        });
 
         let modal = document.getElementById('favorites-modal');
         if (!modal) {
