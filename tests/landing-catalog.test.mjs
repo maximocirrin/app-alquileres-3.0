@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import { test } from 'node:test';
 
-const source = fs.readFileSync(new URL('../js/landing-catalog.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('../js/landing-catalog.min.js', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const featuredScript = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)]
     .map(match => match[1]).find(script => script.includes('window.renderLandingFeaturedProperties ='));
@@ -118,8 +118,8 @@ test('untrusted card text and image schemes stay escaped before security librari
 test('the critical section is visible without an animation observer, and its loader precedes all external scripts', () => {
     const section = html.match(/<section\b[^>]*id="landing-featured-properties-section"[^>]*>/)[0];
     assert.doesNotMatch(section, /animate-on-scroll|opacity-0|hidden/);
-    assert.match(html.match(/<script\b[^>]*src="[^"]+"[^>]*>/)[0], /landing-catalog\.js/);
-    assert.ok(html.indexOf('window.renderLandingFeaturedProperties();') < html.indexOf('<script src="https://cdn.jsdelivr.net/npm/@supabase'));
+    assert.match(html.match(/<script\b[^>]*src="[^"]+"[^>]*>/)[0], /landing-catalog\.min\.js/);
+    assert.ok(html.indexOf('window.renderLandingFeaturedProperties();') < html.indexOf('<script defer src="https://cdn.jsdelivr.net/npm/@supabase'));
     for (const link of html.matchAll(/<link\b[^>]*href="https:\/\/fonts.googleapis.com[^>]*>/g)) {
         if (link[0].includes('rel="stylesheet"')) assert.match(link[0], /media="print"/);
     }

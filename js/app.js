@@ -2,6 +2,23 @@
  * Main Application Logic
  */
 
+// Las fechas contractuales son días de calendario, sin conversión de zona horaria.
+window.formatContractStartDate = function (contract) {
+    const value = Object.prototype.hasOwnProperty.call(contract || {}, 'fecha_inicio_contrato')
+        ? contract.fecha_inicio_contrato
+        : (contract?.start_date || contract?.startDate);
+    const text = String(value || '').trim();
+    const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+    const local = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!iso && !local) return 'Fecha no registrada';
+    const [, year, month, day] = iso || [null, local[3], local[2], local[1]];
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+    if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day)) {
+        return 'Fecha no registrada';
+    }
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+};
+
 // Automated Client-Side Cache Sanitizer for Vivat
 (function() {
     try {
@@ -12687,12 +12704,13 @@ window.toggleAccordion = function (contentId, btn) {
 };
 
 // Step 3 Selected Features Chips and Search Logic
-document.addEventListener('DOMContentLoaded', () => {
+window.initPublishWizardEvents = () => {
     const formExtras = document.getElementById('form-extras');
     const selectedFeaturesContainer = document.getElementById('selected-features-container');
     const searchInput = document.querySelector('#form-extras input[type="text"][placeholder="Ej. Permite mascotas"]');
 
-    if (formExtras && selectedFeaturesContainer) {
+    if (formExtras && selectedFeaturesContainer && !formExtras.dataset.featuresBound) {
+        formExtras.dataset.featuresBound = 'true';
         const featureCheckboxes = formExtras.querySelectorAll('.checkbox-wrapper input[type="checkbox"]');
 
         // Logic for updating chips
@@ -12774,7 +12792,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-});
+};
+document.addEventListener('DOMContentLoaded', window.initPublishWizardEvents);
 
 // Landing propietarios: static carousel controlled by step buttons
 document.addEventListener('DOMContentLoaded', () => {
@@ -14916,3 +14935,4 @@ if (document.readyState === 'loading') {
 } else {
     autoInitAppBasics();
 }
+//# sourceMappingURL=app.js.map

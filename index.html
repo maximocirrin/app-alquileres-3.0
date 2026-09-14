@@ -15,10 +15,10 @@
             overflow: hidden !important;
         }
     </style>
-    <script src="js/landing-catalog.js?v=1" fetchpriority="high"></script>
+    <script src="js/landing-catalog.min.js?v=2" fetchpriority="high"></script>
     <script async src="js/material-icons-loader.js?v=1"></script>
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vivat | Alquileres Seguros, Garantías y Contratos Digitales</title>
 
     <!-- Metadatos Open Graph / WhatsApp / Facebook (Prioritarios para el crawler) -->
@@ -57,6 +57,7 @@
     <meta name="robots" content="index, follow">
     <meta name="geo.region" content="AR">
     <link rel="canonical" href="https://vivat.com.ar/">
+    <link rel="preload" as="image" href="img/hero-marketplace.webp" fetchpriority="high">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-RQET5XVCSH"></script>
@@ -141,7 +142,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="css/tailwind.css?v=1">
+    <link rel="stylesheet" href="css/tailwind.css?v=2">
     <link rel="stylesheet" href="css/style.css?v=15">
     <style>
         /* Flechas Laterales de Carruseles en Modo Escritorio */
@@ -1033,7 +1034,7 @@
         class="bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
 
         <!-- TopNavBar Component -->
-        <script src="js/navbar.js?v=4"></script>
+        <script src="js/navbar.js?v=5"></script>
         <main class="pt-16 lg:pt-20">
             <!-- Hero Section -->
             <section
@@ -1041,7 +1042,7 @@
                 <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                     <img alt="Vivat Alquileres"
                         class="w-full h-full object-cover object-center scale-[1.02] transform-gpu brightness-[0.70] dark:brightness-[0.55] filter contrast-[1.05]"
-                        src="img/hero-marketplace.jpg" />
+                        src="img/hero-marketplace.webp" width="1024" height="572" fetchpriority="high" loading="eager" decoding="async" />
                     <!-- Cinematic gradient vignette -->
                     <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-[#09090b]/95"></div>
                 </div>
@@ -1071,15 +1072,15 @@
 
                 <div class="relative z-10 w-full max-w-4xl px-4 sm:px-6 text-center">
                     <h1
-                        class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-extrabold text-white mb-4 sm:mb-5 tracking-[-0.03em] leading-[1.1] animate-on-scroll">
+                        class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-extrabold text-white mb-4 sm:mb-5 tracking-[-0.03em] leading-[1.1]">
                         Alquilar nunca fue tan rápido, transparente y 100% digital.
                     </h1>
                     <div
-                        class="font-body text-base sm:text-lg md:text-xl text-zinc-200/90 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal animate-on-scroll delay-100">
+                        class="font-body text-base sm:text-lg md:text-xl text-zinc-200/90 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal">
                         Vivat elimina la burocracia analógica. Buscá, validá tu identidad, firmá y gestioná tu
                         alquiler directamente desde el celular, sin costos ocultos.
                     </div>
-                    <div class="max-w-2xl mx-auto animate-on-scroll delay-200">
+                    <div class="max-w-2xl mx-auto">
                         <form action="buscar.html" method="GET" class="w-full m-0" id="hero-search-form">
                             <div class="relative group">
                                 <div
@@ -1642,7 +1643,7 @@
                     <a href="buscar.html?filter=casa"
                         class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                            <img src="img/casas-inquilinos.jpg" alt="Casas en alquiler"
+                            <img src="img/casas-inquilinos.webp" width="640" height="478" loading="lazy" decoding="async" alt="Casas en alquiler"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
@@ -1659,7 +1660,7 @@
                     <a href="buscar.html?filter=departamento"
                         class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                            <img src="img/pisos-inquilinos.jpg" alt="Departamentos en alquiler"
+                            <img src="img/pisos-inquilinos.webp" width="500" height="500" loading="lazy" decoding="async" alt="Departamentos en alquiler"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
@@ -1676,7 +1677,7 @@
                     <a href="buscar.html?filter=local-comercial"
                         class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                            <img src="img/locales-comerciales.jpg" alt="Locales comerciales en alquiler"
+                            <img src="img/locales-comerciales.webp" width="640" height="478" loading="lazy" decoding="async" alt="Locales comerciales en alquiler"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
@@ -1693,7 +1694,7 @@
                     <a href="buscar.html?filter=monoambiente"
                         class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                            <img src="img/estudios-inquilinos.jpg" alt="Monoambientes en alquiler"
+                            <img src="img/estudios-inquilinos.webp" width="500" height="500" loading="lazy" decoding="async" alt="Monoambientes en alquiler"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
@@ -1727,7 +1728,7 @@
                     </p>
                     <a href="propietarios.html"
                         class="inline-flex items-center justify-center rounded-full border border-zinc-800 dark:border-zinc-200 px-10 py-4 font-body font-bold text-base text-zinc-800 dark:text-zinc-200 hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-200 dark:hover:text-zinc-900 transition-all duration-300 shadow-sm hover:shadow active:scale-[0.98]">
-                        Más información
+                        Conocer los servicios para propietarios
                     </a>
                 </div>
             </section>
@@ -2554,7 +2555,6 @@
                                 class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
                                 <a href="#"
                                     class="hover:text-primary dark:hover:text-red-400 transition-colors">Colaboradores</a>
-                                Programa de Socios</a>
                             </nav>
                         </div>
                     </div>
@@ -2568,9 +2568,9 @@
                             <a href="#"
                                 class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
                                 <div class="flex -space-x-2.5">
-                                    <img src="img/tenant-profile-1.jpg" alt="Avatar 1"
+                                    <img src="img/tenant-profile-1.webp" width="64" height="64" loading="lazy" decoding="async" alt="Avatar 1"
                                         class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900" />
-                                    <img src="img/tenant-profile-2.jpg" alt="Avatar 2"
+                                    <img src="img/tenant-profile-2.webp" width="64" height="64" loading="lazy" decoding="async" alt="Avatar 2"
                                         class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900" />
                                 </div>
                                 <span
@@ -2608,7 +2608,7 @@
                 <div class="pt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                     <!-- Left: Copyright and Logo -->
                     <div class="flex items-center gap-3.5 flex-wrap">
-                        <img src="img/logo-vivat-web.svg" alt="Vivat Logo"
+                        <img src="img/logo-vivat-web.svg" alt="Vivat Logo" width="1024" height="1024" loading="lazy" decoding="async"
                             class="h-8 w-auto object-contain dark:brightness-200 dark:opacity-90" />
                         <span class="font-body text-sm text-zinc-500 dark:text-zinc-400">
                             &copy; 2026 Vivat &ndash; Todos los derechos reservados
@@ -2692,39 +2692,16 @@
     </button>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
-    <script src="js/supabaseClient.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/lead-monetization.js"></script>
-    <script src="js/publish-property.js?v=107"></script>
-    <script src="js/app.js?v=107"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
+    <script defer src="js/supabaseClient.js"></script>
+    <script defer src="js/data.min.js?v=108"></script>
+    <script defer src="js/lead-monetization.js"></script>
+    <script defer src="js/app.min.js?v=108"></script>
     <!-- Google Maps -->
-    <script src="js/google-maps-loader.js"></script>
+    <script defer src="js/google-maps-loader.js"></script>
+    <script defer src="js/landing-search.min.js?v=1"></script>
     <script>
-        function initIndexSearch() {
-            const input = document.getElementById('index-location-search');
-            if (input && window.google && window.google.maps && window.google.maps.places) {
-                try {
-                    new google.maps.places.Autocomplete(input, {
-                        componentRestrictions: { country: 'ar' },
-                        fields: ['address_components', 'geometry', 'icon', 'name'],
-                        types: ['(regions)']
-                    });
-                } catch (e) {
-                    console.warn('[Places Autocomplete Error]:', e);
-                }
-            }
-        }
-        function initGoogleMapAndSearch() {
-            if (typeof window.initGoogleMap === 'function') {
-                window.initGoogleMap();
-            }
-            initIndexSearch();
-        }
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.loadGoogleMaps === 'function') {
-                window.loadGoogleMaps('initGoogleMapAndSearch', 'places');
-            }
             if (window.App) {
                 App.init();
             } else {
@@ -2825,7 +2802,7 @@
                 <!-- Operación -->
                 <div>
                     <label
-                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2.5">Tipo
                         de Operación</label>
                     <div class="grid grid-cols-3 gap-2" id="hero-filter-operation-group">
                         <button type="button" data-op="all"
@@ -2840,7 +2817,7 @@
                 <!-- Tipo de propiedad -->
                 <div>
                     <label
-                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2.5">Tipo
                         de Propiedad</label>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="hero-filter-type-group">
                         <button type="button" data-type="all"
@@ -2879,7 +2856,7 @@
                 <!-- Rango de Precio -->
                 <div>
                     <label
-                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2.5">Rango
                         de Precio ($ ARS / mes)</label>
 
                     <!-- Visual Quick Presets -->
@@ -2900,7 +2877,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <span
-                                class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
+                                class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400 block mb-1">Mínimo</span>
                             <div
                                 class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                 <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
@@ -2911,7 +2888,7 @@
                         </div>
                         <div>
                             <span
-                                class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
+                                class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400 block mb-1">Máximo</span>
                             <div
                                 class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                 <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
@@ -2926,7 +2903,7 @@
                 <!-- Dormitorios / Ambientes -->
                 <div>
                     <label
-                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2.5">Dormitorios
                         / Ambientes</label>
                     <div class="flex flex-wrap gap-2" id="hero-filter-rooms-group">
                         <button type="button" data-rooms="all"
@@ -2949,7 +2926,7 @@
                 <!-- Requisitos y Amenities -->
                 <div>
                     <label
-                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2.5">Requisitos
                         & Amenities</label>
                     <div class="grid grid-cols-2 sm:grid-cols-2 gap-2" id="hero-filter-amenities-group">
                         <button type="button" data-amenity="pet"
@@ -3259,9 +3236,9 @@
             }
         });
     </script>
-    <script src="js/didit-kyc.js"></script>
-    <script src="js/owner-verification.js"></script>
-    <script src="js/notifications.js"></script>
+    <script defer src="js/didit-kyc.js"></script>
+    <script defer src="js/owner-verification.js"></script>
+    <script defer src="js/notifications.js"></script>
 </body>
 
 </html>

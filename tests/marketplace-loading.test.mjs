@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import { test } from 'node:test';
 
-const dataSource = fs.readFileSync(new URL('../js/data.js', import.meta.url), 'utf8');
+const dataSource = fs.readFileSync(new URL('../js/data.min.js', import.meta.url), 'utf8');
 const clientSource = fs.readFileSync(new URL('../js/supabaseClient.js', import.meta.url), 'utf8');
 const landingSource = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
@@ -134,7 +134,8 @@ test('public client is isolated from persisted credentials and reused', () => {
 });
 
 test('landing starts requests before editor scripts and does not reload them on window.load', () => {
-    assert.ok(landingSource.indexOf('window.renderLandingFeaturedProperties();') < landingSource.indexOf('<script src="js/publish-property.js'));
+    assert.doesNotMatch(landingSource, /<script\b[^>]*src="js\/publish-property\.js/);
+    assert.ok(landingSource.indexOf('window.renderLandingFeaturedProperties();') < landingSource.indexOf('<script defer src="js/app.min.js'));
     assert.doesNotMatch(landingSource, /addEventListener\('(load|DOMContentLoaded)', (renderLandingFeaturedProperties|initCityPropertiesSection)\)/);
     for (const match of landingSource.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
         if (!/type="application\/ld\+json"/.test(match[1]) && match[2].trim()) {
