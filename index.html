@@ -1250,7 +1250,7 @@
                     grid.addEventListener('scroll', updateFeaturedArrowsState, { passive: true });
                 }
 
-                async function renderLandingFeaturedProperties() {
+                async function renderLandingFeaturedCards() {
                     const grid = document.getElementById('landing-featured-properties-grid');
                     if (!grid) return;
 
@@ -1418,9 +1418,10 @@
                     }
                 }
                 let featuredRenderPending = null;
+                // Use a distinct name: classic script functions share bindings with window.
                 window.renderLandingFeaturedProperties = function () {
                     if (!featuredRenderPending) {
-                        featuredRenderPending = renderLandingFeaturedProperties()
+                        featuredRenderPending = renderLandingFeaturedCards()
                             .finally(() => { featuredRenderPending = null; });
                     }
                     return featuredRenderPending;
