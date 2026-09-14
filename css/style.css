@@ -4144,39 +4144,54 @@ html.dark .checkbox-wrapper .checkbox-tick,
 
 /* ==========================================================================
    Google Maps Places Autocomplete Dropdown (.pac-container)
-   Asegura visualización por encima del modal con z-index 99999 y tema oscuro
+   Asegura coherencia visual premium con Vivat, z-index elevado y soporte dark mode
    ========================================================================== */
 .pac-container {
     z-index: 10000000 !important;
-    background-color: #ffffff !important;
-    border-radius: 1rem !important;
-    border: 1px solid #e4e4e7 !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-    margin-top: 6px !important;
-    font-family: inherit !important;
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 1.25rem !important;
+    border: 1px solid rgba(228, 228, 231, 0.9) !important;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+    margin-top: 8px !important;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     overflow: hidden !important;
     pointer-events: auto !important;
-    padding: 4px 0 !important;
+    padding: 6px !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 640px) {
+    .pac-container {
+        left: 1rem !important;
+        right: 1rem !important;
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        border-radius: 1.25rem !important;
+    }
 }
 
 html.dark .pac-container,
 [data-theme="dark"] .pac-container,
 .dark .pac-container {
-    background-color: #18181b !important;
-    border-color: #27272a !important;
-    box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+    background-color: rgba(24, 24, 27, 0.96) !important;
+    border-color: rgba(63, 63, 70, 0.8) !important;
+    box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 .pac-item {
     padding: 10px 14px !important;
+    margin: 2px 0 !important;
+    border-radius: 0.75rem !important;
     cursor: pointer !important;
-    font-size: 13px !important;
-    color: #18181b !important;
-    border-top: 1px solid #f4f4f5 !important;
+    font-size: 13.5px !important;
+    color: #27272a !important;
+    border-top: none !important;
     display: flex !important;
     align-items: center !important;
-    line-height: 1.4 !important;
-    transition: background-color 0.15s ease !important;
+    line-height: 1.45 !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
 .pac-item:first-child {
@@ -4187,12 +4202,11 @@ html.dark .pac-item,
 [data-theme="dark"] .pac-item,
 .dark .pac-item {
     color: #f4f4f5 !important;
-    border-top-color: #27272a !important;
 }
 
 .pac-item:hover,
 .pac-item-selected {
-    background-color: #f4f4f5 !important;
+    background-color: rgba(129, 27, 30, 0.07) !important;
 }
 
 html.dark .pac-item:hover,
@@ -4201,14 +4215,14 @@ html.dark .pac-item-selected,
 [data-theme="dark"] .pac-item-selected,
 .dark .pac-item:hover,
 .dark .pac-item-selected {
-    background-color: #27272a !important;
+    background-color: rgba(255, 255, 255, 0.09) !important;
 }
 
 .pac-item-query {
-    font-size: 13px !important;
-    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
     color: #09090b !important;
-    padding-right: 4px !important;
+    padding-right: 6px !important;
 }
 
 html.dark .pac-item-query,
@@ -4218,23 +4232,37 @@ html.dark .pac-item-query,
 }
 
 .pac-matched {
-    font-weight: 800 !important;
-    color: #0284c7 !important;
+    font-weight: 700 !important;
+    color: #811b1e !important;
 }
 
 html.dark .pac-matched,
 [data-theme="dark"] .pac-matched,
 .dark .pac-matched {
-    color: #38bdf8 !important;
+    color: #f87171 !important;
 }
 
 .pac-icon {
-    margin-right: 10px !important;
+    margin-right: 12px !important;
     margin-top: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+html.dark .pac-icon,
+[data-theme="dark"] .pac-icon,
+.dark .pac-icon {
+    filter: invert(0.85) brightness(1.2) !important;
 }
 
 .pac-logo::after {
-    margin: 8px 12px 4px !important;
+    margin: 8px 12px 6px !important;
+    opacity: 0.75 !important;
+}
+
+html.dark .pac-logo::after,
+[data-theme="dark"] .pac-logo::after,
+.dark .pac-logo::after {
+    filter: invert(0.85) brightness(1.2) !important;
 }
 
 /* Flechas Laterales de Carruseles en Modo Escritorio */
@@ -4759,7 +4787,6 @@ html.dark .desktop-carousel-arrow,
     }
 
     .landing-journey-steps li.is-active {
-        border-color: var(--premium-accent);
         box-shadow: 0 4px 18px 0 rgba(129, 27, 30, 0.25), 0 1px 4px 0 rgba(0, 0, 0, 0.05);
         transform: translateY(-2px);
     }
@@ -4781,7 +4808,7 @@ html.dark .desktop-carousel-arrow,
     .landing-journey-steps li.is-active .landing-journey-icon {
         transform: rotate(-5deg) translateY(-1px);
         background: var(--premium-accent);
-        border-color: var(--premium-accent);
+        border-color: transparent;
         color: var(--premium-card);
     }
 
@@ -4852,8 +4879,8 @@ html.dark .desktop-carousel-arrow,
 
     .dark .landing-journey-steps li.is-active,
     html.dark .landing-journey-steps li.is-active {
-        border-color: var(--premium-accent);
-        box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px var(--premium-accent);
+        box-shadow: 0 4px 18px 0 rgba(207, 57, 67, 0.35), 0 2px 8px 0 rgba(0, 0, 0, 0.5);
+        transform: translateY(-2px);
     }
 
     .dark .landing-journey-icon,
@@ -4866,7 +4893,7 @@ html.dark .desktop-carousel-arrow,
     .dark .landing-journey-steps li.is-active .landing-journey-icon,
     html.dark .landing-journey-steps li.is-active .landing-journey-icon {
         background: var(--premium-accent);
-        border-color: var(--premium-accent);
+        border-color: transparent;
         color: var(--premium-card);
     }
 
