@@ -3,7 +3,7 @@
     'use strict';
 
     function init() {
-        if (!document.body.classList.contains('landing-premium')) return;
+        if (!document.body.classList.contains('landing-premium') && !document.querySelector('.animate-on-scroll')) return;
 
         const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
         const seen = new WeakSet();
@@ -38,7 +38,6 @@
         }
 
         // Initialize single IntersectionObserver with threshold 0 and positive rootMargin.
-        // Never disconnect on resize, which previously discarded observed elements on iOS Safari toolbar collapse!
         if ('IntersectionObserver' in window && !preference.matches) {
             observer = new IntersectionObserver(entries => {
                 for (const entry of entries) {
@@ -56,14 +55,14 @@
         window.marketplaceObserver = {
             observe(element) {
                 if (!element || seen.has(element)) return;
-                const excluded = element.closest('.premium-hero, .premium-proof-rail, .landing-journey, #landing-featured-properties-section');
                 const vh = window.innerHeight || document.documentElement?.clientHeight || 800;
-                let isNearViewport = false;
+                let isOffscreen = false;
                 try {
-                    isNearViewport = element.getBoundingClientRect().top < vh + 60;
+                    const rect = element.getBoundingClientRect();
+                    isOffscreen = rect.top > vh - 20;
                 } catch { }
 
-                if (!observer || preference.matches || excluded || isNearViewport || !element.closest('main')) {
+                if (!observer || preference.matches || !isOffscreen) {
                     reveal(element);
                     return;
                 }
@@ -84,6 +83,22 @@
             }
         };
 
+        // Add auto-stagger to card grids and lists if not explicitly delayed
+        document.querySelectorAll('.grid, .landing-journey-steps, ul, ol').forEach(container => {
+            const children = Array.from(container.children).filter(child => child.classList?.contains('animate-on-scroll'));
+            if (children.length > 1) {
+                children.forEach((child, index) => {
+                    const hasDelay = Array.from(child.classList).some(c => c.startsWith('delay-'));
+                    if (!hasDelay) {
+                        const staggerMs = Math.min((index % 4) * 80, 320);
+                        if (staggerMs > 0) {
+                            child.style.transitionDelay = `${staggerMs}ms`;
+                        }
+                    }
+                });
+            }
+        });
+
         document.querySelectorAll(editorialTargets).forEach(element => element.classList.add('animate-on-scroll'));
         document.querySelectorAll('.animate-on-scroll').forEach(element => window.marketplaceObserver.observe(element));
 
@@ -91,6 +106,10 @@
         document.addEventListener('focusin', event => {
             const element = event.target.closest('.animate-on-scroll');
             if (element) reveal(element);
+        });
+
+        window.addEventListener('beforeprint', () => {
+            pendingElements.forEach(reveal);
         });
 
         preference.addEventListener?.('change', () => {
@@ -118,17 +137,10 @@
         window.addEventListener('resize', onScrollOrResize, { passive: true });
         window.addEventListener('orientationchange', onScrollOrResize, { passive: true });
 
-        // Initial layout settling passes
+        // Initial layout settling passes: check if any pending elements entered view on load
         raf(checkPendingVisibility);
-        setTimeout(checkPendingVisibility, 300);
-
-        // Absolute safety timer: ensure no element is ever stuck invisible
-        setTimeout(() => {
-            if (pendingElements.size > 0) {
-                pendingElements.forEach(reveal);
-                pendingElements.clear();
-            }
-        }, 1200);
+        setTimeout(checkPendingVisibility, 350);
+        setTimeout(checkPendingVisibility, 800);
         // Auto-advancing landing journey carousel on mobile with desktop-matching active effect
         document.querySelectorAll('.landing-journey').forEach(journey => {
             const steps = journey.querySelector('.landing-journey-steps');
