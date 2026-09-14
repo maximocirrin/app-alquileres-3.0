@@ -3773,7 +3773,7 @@ html.dark .landing-menu__divider {
     border-radius: 4px;
 }
 
-.animate-on-scroll {
+.kanban-col-scroll .animate-on-scroll {
     animation: fadeInUp 0.35s ease-out forwards;
 }
 
@@ -3968,7 +3968,7 @@ html.dark .checkbox-wrapper .checkbox-tick,
     border-radius: 4px;
 }
 
-.animate-on-scroll {
+.kanban-col-scroll .animate-on-scroll {
     animation: fadeInUp 0.35s ease-out forwards;
 }
 
