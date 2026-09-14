@@ -14,6 +14,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.4.12/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
+    <!-- Prevent icon ligature text from painting before the font is available. -->
+    <style id="material-icons-loading-guard">
+        :where(.material-icons, [class*="material-symbols"]) { font-size: 24px; }
+        html:not(.material-icons-ready) :is(.material-icons, [class*="material-symbols"]) {
+            visibility: hidden !important;
+            display: inline-block;
+            width: 1em !important;
+            min-width: 1em !important;
+            height: 1em !important;
+            overflow: hidden !important;
+        }
+    </style>
+    <script async src="js/material-icons-loader.js?v=1"></script>
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#ffffff" id="meta-theme-color">

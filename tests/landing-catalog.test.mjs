@@ -6,7 +6,7 @@ import { test } from 'node:test';
 const source = fs.readFileSync(new URL('../js/landing-catalog.js', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const featuredScript = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)]
-    .map(match => match[1]).find(script => script.includes('async function renderLandingFeaturedProperties()'));
+    .map(match => match[1]).find(script => script.includes('window.renderLandingFeaturedProperties ='));
 
 function row(id = 1, state = 1) {
     return {
@@ -26,7 +26,7 @@ function setup() {
         addEventListener() {}, appendChild(card) { this.children.push(card); }
     };
     const context = vm.createContext({
-        window: { location: { href: 'https://vivat.com.ar/' }, addEventListener() {} },
+        location: { href: 'https://vivat.com.ar/' }, addEventListener() {},
         document: {
             getElementById(id) { return id === 'landing-featured-properties-grid' ? grid : null; },
             createElement() { return { dataset: {}, querySelector() { return { addEventListener() {} }; } }; }
@@ -42,6 +42,8 @@ function setup() {
             });
         }
     });
+    // Classic browser scripts share their global bindings with window.
+    vm.runInContext('window = globalThis;', context);
     vm.runInContext(source, context);
     return { context, calls, grid, timers, catalog: context.window.LandingCatalog };
 }
@@ -52,9 +54,11 @@ test('the head starts the request and paints real cards while Supabase, DataMana
     assert.equal(context.window.supabase, undefined);
     assert.equal(context.window.DataManager, undefined);
     vm.runInContext(featuredScript, context);
+    const pending = context.window.renderLandingFeaturedProperties();
+    assert.equal(context.window.renderLandingFeaturedProperties(), pending, 'concurrent renders share one promise');
     assert.equal(calls.length, 1, 'renderer consumes the in-flight request');
     calls[0].resolve({ ok: true, json: async () => [row()] });
-    await context.window.renderLandingFeaturedProperties();
+    await pending;
     assert.equal(grid.children.length, 1);
     assert.match(grid.children[0].innerHTML, /San Martín 123/);
     assert.match(grid.children[0].innerHTML, /500\.000/);
