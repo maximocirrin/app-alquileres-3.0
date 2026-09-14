@@ -106,8 +106,96 @@
             if (!preference.matches) return;
             window.marketplaceObserver.disconnect();
         });
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) for (const element of running.keys()) finish(element);
+        // Auto-advancing landing journey carousel on mobile with desktop-matching active effect
+        document.querySelectorAll('.landing-journey').forEach(journey => {
+            const steps = journey.querySelector('.landing-journey-steps');
+            const cards = steps ? Array.from(steps.querySelectorAll('li')) : [];
+            const dots = Array.from(journey.querySelectorAll('.landing-journey-dots span'));
+            if (!steps || cards.length === 0) return;
+
+            let currentIndex = 0;
+            let autoPlayTimer = null;
+            let pauseTimer = null;
+            let isPaused = false;
+
+            const setActiveIndex = (index, smoothScroll = false) => {
+                currentIndex = index;
+                cards.forEach((card, i) => card.classList.toggle('is-active', i === index));
+                dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+
+                if (smoothScroll && window.innerWidth < 700) {
+                    const card = cards[index];
+                    const targetLeft = card.offsetLeft - (steps.clientWidth - card.clientWidth) / 2;
+                    steps.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+                }
+            };
+
+            // Set initial card as active
+            setActiveIndex(0, false);
+
+            const nextStep = () => {
+                if (window.innerWidth >= 700 || isPaused) return;
+                const nextIndex = (currentIndex + 1) % cards.length;
+                setActiveIndex(nextIndex, true);
+            };
+
+            const startAutoplay = () => {
+                stopAutoplay();
+                autoPlayTimer = setInterval(nextStep, 2300);
+            };
+
+            const stopAutoplay = () => {
+                if (autoPlayTimer) {
+                    clearInterval(autoPlayTimer);
+                    autoPlayTimer = null;
+                }
+            };
+
+            const pauseTemporarily = () => {
+                isPaused = true;
+                if (pauseTimer) clearTimeout(pauseTimer);
+                pauseTimer = setTimeout(() => {
+                    isPaused = false;
+                }, 2800);
+            };
+
+            // Detect active card on manual scroll
+            let scrollTimeout = null;
+            steps.addEventListener('scroll', () => {
+                pauseTemporarily();
+                if (scrollTimeout) cancelAnimationFrame(scrollTimeout);
+                scrollTimeout = requestAnimationFrame(() => {
+                    const scrollCenter = steps.scrollLeft + steps.clientWidth / 2;
+                    let closestIdx = 0;
+                    let minDiff = Infinity;
+                    cards.forEach((card, i) => {
+                        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+                        const diff = Math.abs(scrollCenter - cardCenter);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestIdx = i;
+                        }
+                    });
+                    if (closestIdx !== currentIndex) {
+                        currentIndex = closestIdx;
+                        cards.forEach((card, i) => card.classList.toggle('is-active', i === currentIndex));
+                        dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+                    }
+                });
+            }, { passive: true });
+
+            steps.addEventListener('touchstart', pauseTemporarily, { passive: true });
+            steps.addEventListener('mouseenter', () => { isPaused = true; });
+            steps.addEventListener('mouseleave', () => { isPaused = false; });
+
+            dots.forEach((dot, i) => {
+                dot.addEventListener('click', () => {
+                    pauseTemporarily();
+                    setActiveIndex(i, true);
+                });
+            });
+
+            startAutoplay();
         });
     }
 

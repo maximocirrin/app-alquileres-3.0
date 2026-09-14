@@ -4702,14 +4702,26 @@ html.dark .desktop-carousel-arrow,
 
 @media (max-width: 699px) {
     .landing-journey {
-        padding-inline: clamp(0.5rem, 2vw, 1rem);
-        margin: -0.75rem auto 0;
+        padding-inline: 0;
+        margin: -0.75rem 0 0;
+        position: relative;
+        overflow: hidden;
     }
 
     .landing-journey-steps {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: clamp(0.35rem, 1.4vw, 0.75rem);
-        align-items: stretch;
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.875rem;
+        padding: 0.6rem 1.25rem 1.15rem;
+        margin: 0;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .landing-journey-steps::-webkit-scrollbar {
+        display: none;
     }
 
     .landing-journey-steps::before,
@@ -4718,68 +4730,196 @@ html.dark .desktop-carousel-arrow,
     }
 
     .landing-journey-steps li {
-        min-height: 0;
+        flex: 0 0 84%;
+        width: 84%;
+        min-width: 280px;
+        max-width: 320px;
+        height: 5.75rem;
+        min-height: 5.75rem;
+        max-height: 5.75rem;
+        box-sizing: border-box;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
         margin-top: 0;
-        padding: clamp(0.625rem, 1.8vw, 0.875rem) clamp(0.4rem, 1.2vw, 0.65rem);
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto 1fr;
-        align-items: start;
-        gap: 0.35rem 0.2rem;
-        border-radius: clamp(0.75rem, 2vw, 1rem);
-        box-shadow: 0 2px 8px var(--premium-shadow);
+        padding: 0.85rem 1.1rem;
+        display: grid;
+        grid-template-columns: 2.75rem minmax(0, 1fr) 1.5rem;
+        grid-template-rows: auto;
+        align-items: center;
+        gap: 0.85rem;
+        border-radius: 1.125rem;
+        border: 1px solid rgba(129, 27, 30, 0.12);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(253, 248, 248, 0.92) 100%);
+        box-shadow: 0 4px 14px -2px rgba(129, 27, 30, 0.06), 0 2px 5px -1px rgba(0, 0, 0, 0.04);
+        transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), border-color 320ms ease, box-shadow 320ms ease;
     }
 
     .landing-journey-steps li:nth-child(2) {
         margin-top: 0;
     }
 
+    .landing-journey-steps li.is-active {
+        border-color: var(--premium-accent);
+        box-shadow: 0 4px 18px 0 rgba(129, 27, 30, 0.25), 0 1px 4px 0 rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+
     .landing-journey-icon {
-        width: clamp(1.75rem, 5.2vw, 2.25rem);
-        height: clamp(1.75rem, 5.2vw, 2.25rem);
-        border-radius: clamp(0.45rem, 1.4vw, 0.6rem);
-        justify-self: start;
-        align-self: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.85rem;
+        background: linear-gradient(135deg, rgba(129, 27, 30, 0.12) 0%, rgba(207, 57, 67, 0.06) 100%);
+        border: 1px solid rgba(129, 27, 30, 0.16);
+        color: var(--premium-accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background 240ms ease, color 240ms ease, border-color 240ms ease;
+    }
+
+    .landing-journey-steps li.is-active .landing-journey-icon {
+        transform: rotate(-5deg) translateY(-1px);
+        background: var(--premium-accent);
+        border-color: var(--premium-accent);
+        color: var(--premium-card);
     }
 
     .landing-journey-icon svg {
-        width: clamp(0.95rem, 2.8vw, 1.2rem);
-        height: clamp(0.95rem, 2.8vw, 1.2rem);
-    }
-
-    .landing-journey-number {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-        align-self: center;
-        font-size: clamp(0.85rem, 2.5vw, 1.15rem);
-        line-height: 1;
+        width: 1.35rem;
+        height: 1.35rem;
     }
 
     .landing-journey-steps li > div {
-        grid-column: 1 / -1;
-        grid-row: 2;
+        grid-column: 2;
+        grid-row: 1;
         min-width: 0;
+        overflow: hidden;
+    }
+
+    .landing-journey-number {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        align-self: center;
+        font-family: Manrope, sans-serif;
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        color: var(--premium-muted);
+        opacity: 0.45;
+        transition: color 240ms ease, opacity 240ms ease;
     }
 
     .landing-journey-steps h3 {
-        font-size: clamp(0.725rem, 2.2vw, 0.9375rem);
+        font-size: 0.9375rem;
+        font-weight: 750;
         line-height: 1.25;
-        margin: 0 0 0.2rem;
-        font-weight: 700;
+        margin: 0 0 0.15rem;
+        color: var(--premium-text);
         letter-spacing: -0.015em;
-        word-break: break-word;
-        overflow-wrap: break-word;
-        hyphens: auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: color 240ms ease;
     }
 
     .landing-journey-steps p {
-        font-size: clamp(0.625rem, 1.75vw, 0.775rem);
+        font-size: 0.775rem;
         line-height: 1.35;
+        color: var(--premium-muted);
+        margin: 0;
         letter-spacing: -0.01em;
-        word-break: break-word;
-        overflow-wrap: break-word;
-        hyphens: auto;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
+
+    .landing-journey-steps li.is-active :is(h3, .landing-journey-number) {
+        color: var(--premium-accent);
+        opacity: 1;
+    }
+
+    /* Dark mode */
+    .dark .landing-journey-steps li,
+    html.dark .landing-journey-steps li {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(28, 28, 32, 0.96) 0%, rgba(20, 20, 24, 0.92) 100%);
+        box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.4);
+    }
+
+    .dark .landing-journey-steps li.is-active,
+    html.dark .landing-journey-steps li.is-active {
+        border-color: var(--premium-accent);
+        box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px var(--premium-accent);
+    }
+
+    .dark .landing-journey-icon,
+    html.dark .landing-journey-icon {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #fff;
+    }
+
+    .dark .landing-journey-steps li.is-active .landing-journey-icon,
+    html.dark .landing-journey-steps li.is-active .landing-journey-icon {
+        background: var(--premium-accent);
+        border-color: var(--premium-accent);
+        color: var(--premium-card);
+    }
+
+    .dark .landing-journey-number,
+    html.dark .landing-journey-number {
+        color: #fff;
+        opacity: 0.35;
+    }
+
+    .landing-journey-dots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        margin: 0.15rem auto 0;
+        padding: 0;
+    }
+
+    .landing-journey-dots span {
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 9999px;
+        background: rgba(129, 27, 30, 0.2);
+        transition: all 250ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .landing-journey-dots span.active {
+        width: 1.25rem;
+        background: var(--premium-accent);
+        border-radius: 9999px;
+    }
+
+    .dark .landing-journey-dots span,
+    html.dark .landing-journey-dots span {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .dark .landing-journey-dots span.active,
+    html.dark .landing-journey-dots span.active {
+        background: var(--premium-accent);
+    }
+
+    /* Reduce excess empty space below journey cards on mobile across all landings */
+    #landing-featured-properties-section,
+    .owner-premium-overview,
+    #funciones-corredor {
+        padding-top: 1.75rem !important;
+    }
+}
+
+.landing-journey-dots {
+    display: none;
 }
 
 .premium-section-heading {
