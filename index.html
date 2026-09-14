@@ -144,7 +144,7 @@
         rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/tailwind.css?v=2">
     <link rel="stylesheet" href="css/style.css?v=29">
-    <script defer src="js/landing-motion.js?v=7"></script>
+    <script defer src="js/landing-motion.js?v=8"></script>
     <style>
         /* Flechas Laterales de Carruseles en Modo Escritorio */
         .desktop-carousel-arrow {
@@ -1091,7 +1091,7 @@
                                         <input id="index-location-search" name="location"
                                             class="w-full !bg-transparent text-zinc-900 dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
                                             style="background: transparent !important; background-color: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; height: auto !important; -webkit-appearance: none;"
-                                            placeholder="Barrio, ciudad o dirección" aria-label="Barrio, ciudad o dirección" type="text" autocomplete="off" />
+                                            placeholder="Barrio, ciudad o dirección" aria-label="Barrio, ciudad o dirección" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" data-lpignore="true" />
                                     </div>
 
                                     <input type="hidden" id="hero-filter-input" name="filter" value="all" />
@@ -2734,7 +2734,7 @@
     <script defer src="js/app.min.js?v=108"></script>
     <!-- Google Maps -->
     <script defer src="js/google-maps-loader.js"></script>
-    <script defer src="js/landing-search.min.js?v=1"></script>
+    <script defer src="js/landing-search.min.js?v=4"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.App) {
@@ -3259,8 +3259,6 @@
     <script defer src="js/didit-kyc.js"></script>
     <script defer src="js/owner-verification.js"></script>
     <script defer src="js/notifications.js"></script>
-    <script src="js/google-maps-loader.js"></script>
-    <script defer src="js/landing-search.min.js?v=3"></script>
 </body>
 
 </html>

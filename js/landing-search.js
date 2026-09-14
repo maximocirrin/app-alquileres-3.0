@@ -1,13 +1,25 @@
 // The text search works without Maps; load address suggestions only on focus.
 (() => {
     const input = document.getElementById('index-location-search');
-    if (!input) return;
+    if (!input || input.__vivatAutocompleteAttached) return;
+    input.__vivatAutocompleteAttached = true;
     let requested = false;
     let autocomplete;
     let isAligning = false;
     let pacObserver = null;
 
+    function cleanupDuplicates() {
+        if (typeof document?.querySelectorAll !== 'function') return;
+        const pacs = document.querySelectorAll('.pac-container');
+        if (pacs.length > 1) {
+            for (let i = 1; i < pacs.length; i++) {
+                pacs[i].remove();
+            }
+        }
+    }
+
     function alignPacContainer() {
+        cleanupDuplicates();
         if (isAligning || typeof document?.querySelector !== 'function') return;
         const pac = document.querySelector('.pac-container');
         if (!pac || pac.style.display === 'none') return;
