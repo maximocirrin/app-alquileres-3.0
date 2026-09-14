@@ -5720,13 +5720,17 @@ html.dark .desktop-carousel-arrow,
 }
 
 /* Visible by default, including when JavaScript or IntersectionObserver is unavailable.
-   A single observer enhances only sections entering the viewport. */
-.landing-premium .animate-on-scroll,
+   Scroll animations enhance offscreen elements as they enter the viewport. */
+.landing-premium .animate-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
 .landing-premium .animate-on-scroll.is-visible {
     opacity: 1;
     transform: none;
-    animation: none !important;
-    will-change: auto;
     transition-delay: 0s !important;
 }
 
@@ -5734,8 +5738,7 @@ html.dark .desktop-carousel-arrow,
 @media (prefers-reduced-motion: no-preference) {
     .landing-premium .animate-on-scroll.landing-reveal-pending {
         opacity: 0;
-        transform: translateY(20px);
-        transition: none;
+        transform: translateY(24px);
     }
 }
 
