@@ -4286,24 +4286,39 @@ html.dark .pac-logo::after,
 }
 
 .desktop-carousel-arrow.arrow-left {
-    left: -12px;
+    left: -16px;
 }
 .desktop-carousel-arrow.arrow-right {
-    right: -12px;
+    right: -16px;
 }
 
 @media (min-width: 768px) {
     .desktop-carousel-arrow {
         display: flex !important;
     }
+    .desktop-carousel-arrow.arrow-left {
+        left: -28px;
+    }
+    .desktop-carousel-arrow.arrow-right {
+        right: -28px;
+    }
 }
 
 @media (min-width: 1024px) {
     .desktop-carousel-arrow.arrow-left {
-        left: -24px;
+        left: -48px;
     }
     .desktop-carousel-arrow.arrow-right {
-        right: -24px;
+        right: -48px;
+    }
+}
+
+@media (min-width: 1280px) {
+    .desktop-carousel-arrow.arrow-left {
+        left: -56px;
+    }
+    .desktop-carousel-arrow.arrow-right {
+        right: -56px;
     }
 }
 
