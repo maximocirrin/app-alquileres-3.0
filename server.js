@@ -114,6 +114,7 @@ const rootFiles = new Map([
   ['/og-image.png', 'img/og-vivat.png'],
   ['/og-vivat.png', 'img/og-vivat.png'],
   ['/robots.txt', 'robots.txt'],
+  ['/llms.txt', 'llms.txt'],
   ['/sitemap.xml', 'sitemap.xml']
 ]);
 for (const [route, file] of rootFiles) {

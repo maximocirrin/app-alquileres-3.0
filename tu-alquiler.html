@@ -1847,6 +1847,7 @@
                                                     <span>•</span>
                                                     <span class="truncate max-w-[120px]">${cItem.property_address || 'Mendoza'}</span>
                                                 </div>
+                                                <div class="text-[11px] ${isSelected ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'}">Inicio del contrato: ${window.formatContractStartDate(cItem)}</div>
                                             </div>
                                         </button>
                                     `;
@@ -1905,6 +1906,10 @@
                                 <h2 class="font-headline text-xl sm:text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white">
                                     ${contract.property_title}
                                 </h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">event</span>
+                                    <span>Inicio del contrato: <b>${window.formatContractStartDate(contract)}</b></span>
+                                </p>
                                 ${!isContractGen ? `
                                 <div class="p-2.5 px-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center gap-2 text-xs text-amber-800 dark:text-amber-300">
                                     <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-base shrink-0">pending_actions</span>

@@ -1,0 +1,23 @@
+# Vivat
+
+> Plataforma de alquileres y gestión de propiedades en Argentina para inquilinos, propietarios y profesionales inmobiliarios.
+
+Este archivo reúne las páginas públicas del sitio. La disponibilidad de propiedades y las condiciones de los servicios deben consultarse en sus respectivas páginas.
+
+## Propiedades y servicios
+
+- [Inicio](https://vivat.com.ar/): Presentación de Vivat y sus servicios.
+- [Buscar propiedades](https://vivat.com.ar/buscar.html): Catálogo de propiedades en alquiler.
+- [Servicios para propietarios](https://vivat.com.ar/propietarios.html): Información para publicar y gestionar una propiedad.
+- [Pasaporte Vivat](https://vivat.com.ar/pasaporte-vivat.html): Información sobre el perfil de inquilino.
+- [Consultar valor de alquiler](https://vivat.com.ar/consultar-valor.html): Consulta del valor de alquiler de una propiedad.
+- [Garantía de alquiler](https://vivat.com.ar/detalles-garantia.html): Información sobre la garantía de alquiler.
+
+## Profesionales
+
+- [Corredores inmobiliarios](https://vivat.com.ar/corredores.html): Información para corredores.
+- [Agentes](https://vivat.com.ar/agentes.html): Información para agentes de Vivat.
+
+## Optional
+
+- [Términos y condiciones](https://vivat.com.ar/terminos.html): Condiciones de uso del servicio.

@@ -2974,6 +2974,7 @@
                                 <span class="material-symbols-outlined text-xs ${isFinalizedCard ? 'text-zinc-400' : 'text-rose-500'} shrink-0">location_on</span>
                                 <span class="truncate">${c.property_address || 'Mendoza'}</span>
                             </p>
+                            <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Inicio del contrato: ${window.formatContractStartDate(c)}</p>
                             <div class="mt-2 flex flex-wrap items-center gap-2">
                                 <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-black ${isFinalizedCard ? 'bg-zinc-200/80 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'} flex items-center gap-1">
                                     <span class="material-symbols-outlined text-xs">person</span>
@@ -4551,6 +4552,10 @@
                                     <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-snug truncate">
                                         ${contract.property_title}
                                     </h2>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-sm">event</span>
+                                        <span>Inicio del contrato: <b>${window.formatContractStartDate(contract)}</b></span>
+                                    </p>
                                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
                                         <span class="inline-flex items-center gap-1">
                                             <span class="material-symbols-outlined text-sm text-zinc-400">location_on</span>

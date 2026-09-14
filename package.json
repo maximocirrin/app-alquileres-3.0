@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "build:css": "tailwindcss -i ./css/input.css -o ./css/tailwind.css --minify",
-    "build": "node build-components.js && npm run build:css"
+    "build:sourcemaps": "node scripts/build-sourcemaps.js",
+    "build:js": "node scripts/build-js.js",
+    "build": "node build-components.js && npm run build:css && npm run build:sourcemaps && npm run build:js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "terser": "^5.51.2"
   }
 }
