@@ -30,6 +30,21 @@
             return match ? Number(match[1]) : 0;
         }
 
+        function releaseAfterPaint(animation) {
+            const nextFrame = typeof window.requestAnimationFrame === 'function'
+                ? callback => window.requestAnimationFrame(callback)
+                : callback => callback();
+
+            // WebKit can briefly restore the first transform when a finished animation is
+            // cancelled in its onfinish callback. Two painted frames let the CSS end state
+            // settle before releasing the animation from the compositor.
+            nextFrame(() => nextFrame(() => {
+                try {
+                    animation.cancel();
+                } catch { }
+            }));
+        }
+
         function reveal(element) {
             if (!element) return;
             element.classList.add('is-visible');
@@ -70,7 +85,7 @@
                     show(element);
                     running.delete(element);
                     // Release the WAAPI transform so card and button hover states work normally.
-                    animation.cancel();
+                    releaseAfterPaint(animation);
                 };
             } catch {
                 show(element);
