@@ -14,7 +14,8 @@ export function matchesSignature(remote, signature) {
   return vendor?.kind === 'contract_signature'
     && Number(vendor.contractId) === Number(signature.id_contrato)
     && Number(vendor.profileId) === Number(signature.id_perfil_firmante)
-    && vendor.role === signature.rol_firmante;
+    && vendor.role === signature.rol_firmante
+    && (!signature.didit_scores?.document_hash || vendor.documentHash === signature.didit_scores.document_hash);
 }
 
 export async function diditRequest(path, options = {}) {
@@ -42,7 +43,9 @@ export async function refreshSignature(supabase, signature) {
   if (error) throw error;
   const documentNumber = value => String(value || '').toUpperCase().replace(/[.\s-]/g, '');
   const documents = remote.id_verifications || remote.decision?.id_verifications || [];
-  const identityMatches = Boolean(documentNumber(signer.dni)) && documents.some(d => documentNumber(d.document_number) === documentNumber(signer.dni));
+  const expectedDni = signature.didit_scores?.expected_dni || signer.dni;
+  const identityMatches = Boolean(documentNumber(expectedDni)) && documentNumber(expectedDni) === documentNumber(signer.dni) &&
+    documents.some(d => documentNumber(d.document_number) === documentNumber(expectedDni));
   const status = assessment.status === 'approved' && !identityMatches ? 'review_required' : assessment.status;
   const update = {
     estado_firma: status === 'approved' ? 'biometria_aprobada' : status === 'declined' ? 'biometria_rechazada' : 'biometria_pendiente',

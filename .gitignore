@@ -1,5 +1,7 @@
 # Dependencies
 node_modules/
+.vercel/
+tmp/pdfs/
 
 # Environment variables and secrets
 db_config.js
@@ -25,3 +27,5 @@ Thumbs.db
 *.sql
 !supabase/migrations/*.sql
 !supabase/verification/*.sql
+.vercel
+.env*

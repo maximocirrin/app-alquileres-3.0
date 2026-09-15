@@ -319,7 +319,8 @@ export async function generateAuditTrailPdf({
   userAgent,
   diditSessionId,
   diditScores = {},
-  originalPdfHash = null
+  originalPdfHash = null,
+  recordedAt = new Date().toISOString()
 }) {
   const pdfDoc = await PDFDocument.create();
   
@@ -345,7 +346,7 @@ export async function generateAuditTrailPdf({
     }
   };
 
-  const nowArg = new Date().toLocaleString('es-AR', {
+  const nowArg = new Date(recordedAt).toLocaleString('es-AR', {
     timeZone: 'America/Argentina/Buenos_Aires',
     dateStyle: 'full',
     timeStyle: 'long'
@@ -356,15 +357,26 @@ export async function generateAuditTrailPdf({
   // Banner Header Audit Trail
   page.drawRectangle({ x: 30, y: height - 90, width: width - 60, height: 60, color: lightBg });
   page.drawText('VIVAT - REGISTRO DE FIRMA ELECTRONICA', { x: 45, y: height - 55, size: 13, font: fontBold, color: primaryColor });
-  page.drawText('CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA', { x: 45, y: height - 72, size: 8.5, font: fontBold, color: darkColor });
-  page.drawText('Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023', { x: 45, y: height - 83, size: 7.5, font: fontRegular, color: grayColor });
+  page.drawText('REGISTRO DE VERIFICACION, CONSENTIMIENTO E INTEGRIDAD DOCUMENTAL', { x: 45, y: height - 72, size: 8.5, font: fontBold, color: darkColor });
+  page.drawText('Evidencia emitida por Vivat. Firma electronica con verificacion de identidad.', { x: 45, y: height - 83, size: 7.5, font: fontRegular, color: grayColor });
   
   currentY = height - 115;
 
   const drawRow = (label, val, isMono = false, customColor = darkColor) => {
     checkPageSpace(15);
     page.drawText(label, { x: 45, y: currentY, size: 8.5, font: fontBold, color: darkColor });
-    page.drawText(String(val || '-'), { x: 200, y: currentY, size: isMono ? 7.5 : 8.5, font: isMono ? fontMono : fontRegular, color: customColor });
+    const text = String(val || '-');
+    const face = isMono ? fontMono : fontRegular;
+    const size = isMono ? 7.5 : 8.5;
+    let line = '';
+    for (const char of text) {
+      if (face.widthOfTextAtSize(line + char, size) > width - 245) {
+        page.drawText(line, { x: 200, y: currentY, size, font: face, color: customColor });
+        currentY -= 12; checkPageSpace(15); line = '';
+      }
+      line += char;
+    }
+    page.drawText(line, { x: 200, y: currentY, size, font: face, color: customColor });
     currentY -= 15;
   };
 
@@ -372,7 +384,7 @@ export async function generateAuditTrailPdf({
   page.drawText('1. REGISTRO CRIPTOGRAFICO DEL DOCUMENTO BASE', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
   currentY -= 18;
 
-  drawRow('ID Contrato Legal:', `CTR-2026-${String(contractId).padStart(4, '0')}`);
+  drawRow('ID Contrato:', `CTR-${String(contractId).padStart(4, '0')}`);
   drawRow('Hash SHA-256 Base (Original):', originalPdfHash || 'No disponible aún', true, emeraldColor);
   drawRow('Inmueble Objeto:', propAddress);
 
@@ -387,7 +399,9 @@ export async function generateAuditTrailPdf({
   drawRow('Nombre Completo:', signerName || 'Titular Validado');
   drawRow('DNI / Identificacion:', signerDni || 'Validado por Didit KYC');
   drawRow('Email Registrado:', email || '-');
-  drawRow('Fecha y Hora Oficial (UTC-3):', nowArg);
+  drawRow('Fecha del servidor (UTC-3):', nowArg);
+  drawRow('Consentimiento:', diditScores.consent_version || 'No registrado');
+  drawRow('Aceptado (UTC):', diditScores.consent_at || 'No registrado');
 
   currentY -= 8;
 
@@ -414,16 +428,17 @@ export async function generateAuditTrailPdf({
   currentY -= 8;
 
   // 5. Sellado de Tiempo TSA
-  page.drawText('5. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
+  page.drawText('5. REGISTRO DE EVIDENCIA Y CUSTODIA DE VIVAT', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
   currentY -= 18;
 
-  drawRow('Sello de tiempo:', 'Token externo asociado al hash de este certificado.');
-  drawRow('Algoritmo Criptografico:', 'SHA-256');
+  drawRow('Origen de fecha y hora:', 'Reloj del servidor de Vivat. Sin TSA independiente.');
+  drawRow('Evidencia descargable:', 'Registro JSON con firma Ed25519 y huellas SHA-256.');
+  drawRow('Alcance:', 'La firma de Vivat permite detectar alteraciones; no certifica tiempo independiente.');
 
   // Footer
   page.drawRectangle({ x: 30, y: 35, width: width - 60, height: 45, color: lightBg });
   page.drawText('DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA', { x: 45, y: 62, size: 7.5, font: fontBold, color: darkColor });
-  page.drawText('Este documento certifica la inmutabilidad y autoria del contrato bajo apercibimiento del Codigo Civil y Comercial.', { x: 45, y: 48, size: 6.8, font: fontRegular, color: grayColor });
+  page.drawText('Este registro no es una certificacion de una autoridad licenciada ni un sello de tiempo RFC 3161.', { x: 45, y: 48, size: 6.8, font: fontRegular, color: grayColor });
 
   const auditTrailBytes = Buffer.from(await pdfDoc.save());
   const auditTrailHash = crypto.createHash('sha256').update(auditTrailBytes).digest('hex');

@@ -1,5 +1,7 @@
 import crypto from 'crypto';
 import { diditRequest } from './didit.js';
+import { signingKey, CONSENT_TEXT, CONSENT_VERSION } from './evidence.js';
+import { getSigningContract, bindGuarantor } from './participants.js';
 import { prepareContractDocument, assertReviewedDocument, persistAcceptedDocument } from './documento.js';
 import { readContractForSigning, contractRevision } from './integrity.js';
 import {
@@ -63,16 +65,16 @@ export default async function iniciarHandler(req, res) {
     const body = await readJsonBody(req);
     const contractId = parsePositiveInteger(body.id_contrato || body.idContrato);
     if (!contractId) return res.status(400).json({ ok: false, error: 'Invalid contract id.' });
-    if (body.consentGiven !== true) {
+    if (body.consentGiven !== true || body.consentVersion !== CONSENT_VERSION) {
       return res.status(400).json({ ok: false, error: 'Legal consent is required before signing.' });
     }
 
     const supabase = getSupabaseAdmin();
-    const { contract, role, error: contractError } = await getContractForProfile(supabase, contractId, profile.id_perfil);
+    const { contract, role, guarantor, error: contractError } = await getSigningContract(supabase, contractId, profile, user);
     if (contractError) throw contractError;
     if (!contract) return res.status(404).json({ ok: false, error: 'Not Found' });
     if (!role) return sendForbidden(res, 'No eres parte de este contrato.');
-    const contractDetail = await readContractForSigning(supabase, contractId);
+    let contractDetail = await readContractForSigning(supabase, contractId);
     if (!await consumeRateLimit(supabase, 'didit-signature-session', `${profile.id_perfil}:${contractId}`, 5, 60 * 60)) {
       return sendRateLimited(res);
     }
@@ -80,9 +82,10 @@ export default async function iniciarHandler(req, res) {
     const apiKey = String(process.env.DIDIT_API_KEY || '').trim();
     const workflow = configuredWorkflow(process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID);
     const appUrl = getAppUrl();
-    if (!apiKey || !workflow || !appUrl || !process.env.TSA_SERVER_URL || !process.env.TSA_SERVER_API_KEY) {
+    signingKey();
+    if (!apiKey || !workflow || !appUrl) {
       console.error('[firmas/iniciar] Missing Didit or canonical app configuration.');
-      return res.status(503).json({ ok: false, error: 'Signature service unavailable.', message: 'La firma no está habilitada: falta configurar la verificación o el sellado de tiempo. Contactá al administrador.' });
+      return res.status(503).json({ ok: false, error: 'Signature service unavailable.', message: 'Falta configurar el servicio de verificación de identidad.' });
     }
 
     // A user may not create arbitrary parallel sessions to race a later webhook.
@@ -103,7 +106,7 @@ export default async function iniciarHandler(req, res) {
       }
       if (['sellada','completada'].includes(existing.estado_firma) ||
           (existing.didit_scores?.contract_revision === contractRevision(contractDetail) &&
-           existing.didit_scores?.document_hash === body.documentHash)) {
+           existing.didit_scores?.document_hash === body.documentHash && existing.didit_scores?.consent_version === CONSENT_VERSION)) {
         const { didit_scores, ...publicSignature } = existing;
         return res.status(200).json({ ok: true, data: publicSignature, resumed: true });
       }
@@ -126,6 +129,10 @@ export default async function iniciarHandler(req, res) {
       return res.status(422).json({ ok: false, message: 'Completá nombre, DNI y email de ambas partes antes de firmar.' });
     }
 
+    if (guarantor) await bindGuarantor(supabase, guarantor, profile);
+    const { error: freezeError } = await supabase.rpc('freeze_contract_guarantors', { p_contract_id: contractId });
+    if (freezeError) throw freezeError;
+    contractDetail = await readContractForSigning(supabase, contractId);
     const document = await prepareContractDocument(supabase, contractDetail);
     assertReviewedDocument(document, body.documentHash);
     await persistAcceptedDocument(supabase, contractId, document);
@@ -137,10 +144,9 @@ export default async function iniciarHandler(req, res) {
       role,
       workflowId: workflow,
       requiredChecks: ['document', 'liveness', 'faceMatch'],
-      nonce: crypto.randomUUID()
+      documentHash: document.hash
     });
-    const webhookUrl = `${appUrl}/api/firmas/webhook-didit`;
-    const payload = { workflow_id: workflow, vendor_data: vendorData, webhook_url: webhookUrl };
+    const payload = { workflow_id: workflow, vendor_data: vendorData, callback_method: 'both', language: 'es' };
     if (callbackUrl) {
       payload.callback = callbackUrl;
     }
@@ -156,7 +162,7 @@ export default async function iniciarHandler(req, res) {
         didit_status: 'PENDING',
         didit_session_id: didit.sessionId,
         didit_session_url: didit.url,
-        didit_scores: { consent_given: true, consent_at: new Date().toISOString(), consent_version: 'contract-signature-v2', contract_revision: document.revision, document_hash: document.hash, document_path: document.path },
+        didit_scores: { consent_given: true, consent_at: new Date().toISOString(), consent_version: CONSENT_VERSION, consent_text: CONSENT_TEXT, expected_dni: guarantor?.datos.dni || profile.dni, contract_revision: document.revision, document_hash: document.hash, document_path: document.path },
         ip_origen: getClientIp(req).slice(0, 128),
         user_agent: String(req.headers['user-agent'] || '').slice(0, 512)
       }])
@@ -177,6 +183,8 @@ export default async function iniciarHandler(req, res) {
       }
     });
   } catch (error) {
+    if (error.code === 'EVIDENCE_NOT_CONFIGURED') return res.status(503).json({ ok: false, message: error.message });
+    if (error.code === 'P0001') return res.status(409).json({ ok: false, message: error.message });
     if (error.code === 'DOCUMENT_CHANGED') return res.status(409).json({ ok: false, message: error.message });
     if (error.code === 'CONTRACT_INCOMPLETE') return res.status(422).json({ ok: false, message: error.message });
     if (error.code === '23505') return res.status(409).json({ ok: false, message: 'Otra solicitud ya inició esta firma. Volvé a intentarlo para retomarla.' });

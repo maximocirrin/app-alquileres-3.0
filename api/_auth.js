@@ -178,7 +178,7 @@ export async function getAuthenticatedUser(req) {
     // policy cannot turn every authenticated API request into a 503.
     const profileQuery = getSupabaseAdmin()
       .from('Perfil')
-      .select('id_perfil, user_id, mail, id_tipo_perfil')
+      .select('id_perfil, user_id, mail, id_tipo_perfil, dni, nombre_completo')
       .eq('user_id', user.id)
       .maybeSingle();
     // postgrest-js retries a 503 after 1, 2 and 4 seconds by default. API

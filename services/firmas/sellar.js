@@ -1,6 +1,8 @@
 import { contractRevision, uploadImmutable, assertDocumentHash } from './integrity.js';
 import { refreshSignature } from './didit.js';
 import { generateAuditTrailPdf } from './pdf-generator.js';
+import { issueEvidence, signingKey, CONSENT_VERSION, sha256 } from './evidence.js';
+import { getSigningContract } from './participants.js';
 import {
   getAuthenticatedUser,
   getContractForProfile,
@@ -20,45 +22,6 @@ function approvedByDidit(signature) {
 }
 
 
-async function issueTrustedTimestamp(hash) {
-  const endpoint = String(process.env.TSA_SERVER_URL || '').trim();
-  const apiKey = String(process.env.TSA_SERVER_API_KEY || '').trim();
-  let parsed;
-  try {
-    parsed = new URL(endpoint);
-  } catch {
-    throw new Error('No trusted TSA gateway is configured.');
-  }
-  if (parsed.protocol !== 'https:' || !apiKey) throw new Error('No trusted TSA gateway is configured.');
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12_000);
-  try {
-    const response = await fetch(parsed, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({ hash_algorithm: 'SHA-256', hash })
-    });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result?.timestamp_token || !result?.gen_time || !result?.authority) {
-      throw new Error('The TSA gateway did not return a verifiable timestamp.');
-    }
-    return {
-      authority: String(result.authority).slice(0, 240),
-      gen_time: String(result.gen_time).slice(0, 64),
-      serial_number: String(result.serial_number || '').slice(0, 240),
-      // Persist the token for independent verification. Never synthesize one.
-      timestamp_token: String(result.timestamp_token).slice(0, 200_000),
-      hash_algorithm: 'SHA-256'
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 export default async function sellarHandler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -87,13 +50,21 @@ export default async function sellarHandler(req, res) {
       return sendForbidden(res, 'Solo el firmante autenticado puede completar esta firma.');
     }
 
-    const { contract, role, error: contractError } = await getContractForProfile(supabase, signature.id_contrato, profile.id_perfil);
+    const { contract, role, error: contractError } = await getSigningContract(supabase, signature.id_contrato, profile, user);
     if (contractError) throw contractError;
     if (!contract || !role) return sendForbidden(res, 'No eres parte de este contrato.');
     if (signature.estado_firma === 'sellada') return res.status(200).json({ ok: true, data: {
       id_firma: signature.id_firma, id_contrato: signature.id_contrato, estado_firma: signature.estado_firma,
       url_audit_trail_pdf: signature.url_audit_trail_pdf
     } });
+    const key = signingKey();
+    const { data: history, error: historyError } = await supabase.from('Historial_Estado_Contrato')
+      .select('id_estado_contrato').eq('id_contrato', signature.id_contrato).is('fecha_fin', null)
+      .order('fecha_inicio', { ascending: false }).limit(1).maybeSingle();
+    if (historyError) throw historyError;
+    if (Number(history?.id_estado_contrato) !== 5) return res.status(409).json({ ok: false, message: 'El contrato ya no está pendiente de firma.' });
+    if (signature.rol_firmante !== role) return sendForbidden(res, 'La participación del firmante cambió.');
+    if (signature.didit_scores?.consent_version !== CONSENT_VERSION) return res.status(409).json({ ok: false, message: 'Revisá el consentimiento actualizado e iniciá una nueva firma.' });
     signature = await refreshSignature(supabase, signature);
     if (!approvedByDidit(signature)) {
       return res.status(409).json({ ok: false, error: 'Verification pending.', message: 'La aprobación biométrica aún no fue confirmada por Didit.' });
@@ -130,7 +101,9 @@ export default async function sellarHandler(req, res) {
     if (originalError || !originalFile) throw originalError || new Error('Original contract unavailable.');
     assertDocumentHash(Buffer.from(await originalFile.arrayBuffer()), originalHash);
 
+    const recordedAt = new Date().toISOString();
     const audit = await generateAuditTrailPdf({
+      recordedAt,
       contractId,
       firmaId: signature.id_firma,
       propiedad: contractDetail.Propiedad || {},
@@ -145,11 +118,12 @@ export default async function sellarHandler(req, res) {
       originalPdfHash: originalHash
     });
 
-    // This is deliberately a real external dependency. A locally fabricated
-    // JSON object is not an RFC 3161 timestamp and must never be presented as one.
-    const timestamp = await issueTrustedTimestamp(audit.auditTrailHash);
+    const timestamp = issueEvidence({ signature, auditHash: audit.auditTrailHash, originalHash, recordedAt }, key);
     const auditPath = `contrato_${contractId}/audit_trail_firma_${signature.id_firma}_${audit.auditTrailHash}.pdf`;
     await uploadImmutable(supabase, auditPath, audit.auditTrailBytes);
+    const evidenceBytes = Buffer.from(JSON.stringify(timestamp));
+    const evidencePath = `contrato_${contractId}/evidencia_firma_${signature.id_firma}_${sha256(evidenceBytes)}.json`;
+    await uploadImmutable(supabase, evidencePath, evidenceBytes, 'application/json');
 
     const { data: updated, error: updateError } = await supabase
       .from('Firma_contrato')
@@ -157,20 +131,29 @@ export default async function sellarHandler(req, res) {
         estado_firma: 'sellada',
         hash_original_sha256: originalHash,
         hash_audit_trail_sha256: audit.auditTrailHash,
-        tsa_sello_tiempo: timestamp,
+        tsa_sello_tiempo: { ...timestamp, evidence_path: evidencePath },
         url_audit_trail_pdf: auditPath,
-        fecha_firma: new Date().toISOString()
+        fecha_firma: recordedAt
       })
       .eq('id_firma', signature.id_firma)
       .eq('estado_firma', 'biometria_aprobada')
       .select('id_firma, id_contrato, estado_firma, hash_original_sha256, hash_audit_trail_sha256, url_audit_trail_pdf, fecha_firma')
-      .single();
+      .maybeSingle();
     if (updateError) throw updateError;
+
+    if (!updated) {
+      const { data: sealed, error } = await supabase.from('Firma_contrato')
+        .select('id_firma, id_contrato, estado_firma, hash_original_sha256, hash_audit_trail_sha256, fecha_firma')
+        .eq('id_firma', signature.id_firma).single();
+      if (error) throw error;
+      if (sealed.estado_firma !== 'sellada') return res.status(409).json({ ok: false, message: 'El estado cambió. Consultá la firma nuevamente.' });
+      return res.status(200).json({ ok: true, data: sealed });
+    }
 
     return res.status(200).json({ ok: true, data: updated });
   } catch (error) {
-    if (String(error?.message || '').includes('trusted TSA gateway')) {
-      return res.status(503).json({ ok: false, error: 'Trusted timestamp service unavailable.' });
+    if (error.code === 'EVIDENCE_NOT_CONFIGURED') {
+      return res.status(503).json({ ok: false, message: error.message });
     }
     return sendInternalError(res, 'firmas/sellar', error);
   }
