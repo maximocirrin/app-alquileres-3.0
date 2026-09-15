@@ -11,6 +11,7 @@ import {
   setCorsHeaders
 } from '../../api/_auth.js';
 import { refreshSignature } from './didit.js';
+import { getSigningContract } from './participants.js';
 
 /** Returns only the authenticated signer's server-authoritative signature state. */
 export default async function estadoHandler(req, res) {
@@ -36,7 +37,7 @@ export default async function estadoHandler(req, res) {
     if (error) throw error;
     if (!signature) return res.status(404).json({ ok: false, error: 'Not Found' });
 
-    const { contract, role, error: contractError } = await getContractForProfile(supabase, signature.id_contrato, profile.id_perfil);
+    const { contract, role, error: contractError } = await getSigningContract(supabase, signature.id_contrato, profile, user);
     if (contractError) throw contractError;
     if (!contract || !role || Number(signature.id_perfil_firmante) !== Number(profile.id_perfil)) {
       return sendForbidden(res, 'No puedes consultar esta firma.');

@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (redirect === 'favorites') return 'index.html?fav=1';
         if (redirect === 'corredor' || redirect === 'panel-corredor') return 'panel-corredor.html';
         if (redirect === 'pasaporte') return 'pasaporte-vivat.html';
+        if (redirect === 'firmar') return 'firmar.html';
         return ROLES[currentRole].defaultTarget;
     };
 

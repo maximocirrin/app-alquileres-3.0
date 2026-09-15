@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <style id="material-icons-loading-guard">
+    html:not(.material-icons-ready) :is(.material-icons, [class*="material-symbols"]) {
+      visibility: hidden !important; display: inline-block; width: 1em !important; height: 1em !important; overflow: hidden;
+    }
+    .material-symbols-outlined, .material-symbols-rounded, .material-icons, [class*="material-symbols"] {
+      font-family: 'Material Symbols Outlined' !important; font-weight: normal; font-style: normal; line-height: 1;
+    }
+  </style>
+  <script async src="js/material-icons-loader.js?v=1"></script>
+  <style id="material-icons-loading-guard">
+    html:not(.material-icons-ready) :is(.material-icons, [class*="material-symbols"]) {
+      visibility: hidden !important; display: inline-block; width: 1em !important; height: 1em !important; overflow: hidden;
+    }
+    .material-symbols-outlined, .material-symbols-rounded, .material-icons, [class*="material-symbols"] {
+      font-family: 'Material Symbols Outlined' !important; font-weight: normal; font-style: normal; line-height: 1;
+    }
+  </style>
+  <script async src="js/material-icons-loader.js?v=1"></script>
+  <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+  <title>Firma de contratos | Vivat</title>
+  <link rel="stylesheet" href="css/tailwind.css"><link rel="stylesheet" href="css/signing.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+  <script>try { if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark'); } catch {}</script>
+</head>
+<body>
+  <header class="signing-header"><a href="index.html" aria-label="Vivat, inicio">VIVAT</a><a href="contratos.html">Mis contratos</a>
+    <div class="relative vivat-notif-btn-wrapper">
+      <button type="button" id="vivat-notif-bell-btn" aria-label="Notificaciones" class="relative"><span class="material-symbols-outlined" aria-hidden="true">notifications</span><span class="notification-badge-counter hidden absolute -top-1 -right-1 rounded-full bg-red-700 text-white text-xs px-1">0</span></button>
+      <div id="vivat-notif-dropdown-panel" class="absolute right-0 top-12 w-80 max-w-[90vw] bg-white dark:bg-zinc-900 rounded-2xl shadow-xl hidden z-[99999] overflow-hidden"><div class="notifications-dropdown-menu-target"></div></div>
+    </div>
+  </header>
+  <main class="signing-shell">
+    <p class="signing-eyebrow">CONTRATOS Y GARANTÍAS</p><h1>Tu firma, sobre el documento completo</h1>
+    <p class="signing-muted">Revisá el contrato y sus anexos. Cada participante verifica su identidad y acepta el mismo documento.</p>
+    <p id="signing-status" role="status" aria-live="polite">Cargando tus contratos…</p>
+    <div id="signing-contracts" class="signing-contracts"></div>
+    <section id="signing-review" class="signing-card" hidden>
+      <h2 id="signing-title"></h2><p id="signing-role" class="signing-muted"></p>
+      <button id="signing-preview" type="button">Preparar PDF para revisión</button>
+      <div id="signing-document" hidden>
+        <p><a id="signing-pdf-link" target="_blank" rel="noopener noreferrer">Abrir el PDF completo en otra pestaña</a></p>
+        <iframe id="signing-pdf" title="Contrato y anexos que se van a firmar"></iframe>
+        <label class="signing-consent"><input id="signing-consent" type="checkbox"><span id="signing-consent-text"></span></label>
+        <p class="signing-muted"><a href="terminos.html#privacidad" target="_blank" rel="noopener">Privacidad de Vivat</a> · <a href="https://didit.me/terms/verification-privacy-notice/" target="_blank" rel="noopener noreferrer">Privacidad de Didit</a> · <a href="https://didit.me/terms/identity-verification/" target="_blank" rel="noopener noreferrer">Términos de verificación</a></p>
+        <button id="signing-submit" type="button" disabled>Verificar identidad y firmar</button>
+      </div>
+      <section id="signing-downloads"><h2>Documentos y evidencia</h2><div id="signing-files"></div></section>
+    </section>
+    <p class="signing-muted">El registro de evidencia está firmado por Vivat. Su fecha proviene del servidor de Vivat; no es un sello de tiempo independiente ni una certificación de una autoridad licenciada.</p>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
+  <script src="js/supabaseClient.js"></script><script src="js/notifications.js"></script><script src="js/didit-kyc.js"></script><script src="js/signing-page.js"></script>
+</body></html>

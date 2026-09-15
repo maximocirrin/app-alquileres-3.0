@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import { assertDocumentHash, uploadImmutable } from './integrity.js';
 import { mergeFinalContractPdf } from './pdf-generator.js';
+import { getSigningContract } from './participants.js';
+import { verifyStoredEvidence } from './evidence.js';
 import {
   getAuthenticatedUser,
   getContractForProfile,
@@ -68,6 +70,9 @@ function assertContractCanFinalize(currentState, hasFinalDocument) {
 async function generateFinalDocument(supabase, contract, tenantSignature, ownerSignature, guarantorSignatures = []) {
   const contractId = Number(contract.id_contrato);
   if (contract.hash_final_sha256 && isAllowedDocumentPath(contract.url_contrato_final_pdf, contractId)) {
+    const { data, error } = await supabase.storage.from('contratos_firmados').download(contract.url_contrato_final_pdf);
+    if (error || !data) throw error || new Error('Final document unavailable.');
+    assertDocumentHash(Buffer.from(await data.arrayBuffer()), contract.hash_final_sha256);
     return { path: contract.url_contrato_final_pdf, hash: contract.hash_final_sha256 };
   }
 
@@ -86,6 +91,11 @@ async function generateFinalDocument(supabase, contract, tenantSignature, ownerS
   assertDocumentHash(buffers[0], contract.hash_original_sha256);
   assertDocumentHash(buffers[1], tenantSignature.hash_audit_trail_sha256);
   assertDocumentHash(buffers[2], ownerSignature.hash_audit_trail_sha256);
+  [tenantSignature, ownerSignature, ...guarantorSignatures].forEach((s, index) => {
+    if (!verifyStoredEvidence(s.tsa_sello_tiempo, { originalBytes: buffers[0], auditBytes: buffers[index + 1] })) {
+      throw new Error('Signature evidence could not be verified against a trusted Vivat key.');
+    }
+  });
   guarantorSignatures.forEach((signature, index) => {
     assertDocumentHash(buffers[index + 3], signature.hash_audit_trail_sha256);
     if (signature.hash_original_sha256 !== contract.hash_original_sha256) throw new Error('Guarantor signed a different document.');
@@ -144,41 +154,34 @@ export default async function finalizarHandler(req, res) {
     if (!contractId) return res.status(400).json({ ok: false, error: 'Invalid contract id.' });
 
     const supabase = getSupabaseAdmin();
-    const { contract: participantContract, role, error: contractError } = await getContractForProfile(supabase, contractId, profile.id_perfil);
+    const { contract: participantContract, role, error: contractError } = await getSigningContract(supabase, contractId, profile, user);
     if (contractError) throw contractError;
     if (!participantContract) return res.status(404).json({ ok: false, error: 'Not Found' });
     if (!role) return sendForbidden(res, 'No eres parte de este contrato.');
 
     const { data: contract, error: detailError } = await supabase
       .from('Contrato')
-      .select('id_contrato, hash_original_sha256, url_contrato_original_pdf, hash_final_sha256, url_contrato_final_pdf')
+      .select('id_contrato, garantes_fijados_at, hash_original_sha256, url_contrato_original_pdf, hash_final_sha256, url_contrato_final_pdf')
       .eq('id_contrato', contractId)
       .single();
     if (detailError || !contract) throw detailError || new Error('Contract not found.');
 
     const { data: signatures, error: signaturesError } = await supabase
       .from('Firma_contrato')
-      .select('id_firma, id_perfil_firmante, rol_firmante, estado_firma, didit_status, fecha_firma, hash_contrato_sha256, hash_original_sha256, hash_audit_trail_sha256, url_audit_trail_pdf')
+      .select('id_firma, id_perfil_firmante, rol_firmante, estado_firma, didit_status, fecha_firma, hash_contrato_sha256, hash_original_sha256, hash_audit_trail_sha256, url_audit_trail_pdf, tsa_sello_tiempo')
       .eq('id_contrato', contractId)
       .order('created_at', { ascending: true });
     if (signaturesError) throw signaturesError;
 
     const tenantSignature = (signatures || []).find((item) => item.rol_firmante === 'inquilino' && Number(item.id_perfil_firmante) === Number(participantContract.id_perfil_inquilino) && isSealed(item));
     const ownerSignature = (signatures || []).find((item) => item.rol_firmante === 'propietario' && Number(item.id_perfil_firmante) === Number(participantContract.id_perfil_propietario) && isSealed(item));
-    // A bilateral signature must not silently finalize a contract whose text
-    // also binds guarantors. Their signing portal is a separate prerequisite.
-    const { data: passports, error: passportError } = await supabase.from('Pasaporte_vivat')
-      .select('id_pasaporte').eq('id_perfil', participantContract.id_perfil_inquilino);
-    if (passportError) throw passportError;
-    const passportIds = (passports || []).map(p => p.id_pasaporte);
-    const { data: guarantors, error: guarantorError } = passportIds.length
-      ? await supabase.from('Garante').select('id_garante, id_perfil').in('id_pasaporte', passportIds)
-      : { data: [] };
+    const { data: guarantors, error: guarantorError } = await supabase.from('Contrato_Garante')
+      .select('id_garante, id_perfil').eq('id_contrato', contractId).order('id_garante');
     if (guarantorError) throw guarantorError;
     const guarantorSignatures = (guarantors || []).map(g => (signatures || []).find(s =>
       g.id_perfil && Number(s.id_perfil_firmante) === Number(g.id_perfil) && s.rol_firmante === 'garante' && isSealed(s)));
     const pendingGuarantors = guarantorSignatures.filter(s => !s).length;
-    const complete = Boolean(tenantSignature && ownerSignature && pendingGuarantors === 0);
+    const complete = Boolean(tenantSignature && ownerSignature && pendingGuarantors === 0 && (contract.garantes_fijados_at || contract.hash_final_sha256));
 
     let finalDocument = contract.hash_final_sha256 && isAllowedDocumentPath(contract.url_contrato_final_pdf, contractId)
       ? { path: contract.url_contrato_final_pdf, hash: contract.hash_final_sha256 }
@@ -203,6 +206,9 @@ export default async function finalizarHandler(req, res) {
       audit_trail_propietario: ownerSignature ? await signedUrl(supabase, ownerSignature.url_audit_trail_pdf, contractId) : null,
       contrato_final: finalDocument ? await signedUrl(supabase, finalDocument.path, contractId) : null
     };
+    documents.auditorias_garantes = await Promise.all(guarantorSignatures.filter(Boolean).map(async s => ({
+      id_firma: s.id_firma, url: await signedUrl(supabase, s.url_audit_trail_pdf, contractId)
+    })));
 
     return res.status(200).json({
       ok: true,

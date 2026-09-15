@@ -1,88 +1,133 @@
-# Firma de contratos: puesta en producción
+# Firma de contratos: producción y operación
 
-Estado al 14 de septiembre de 2026: cambios locales preparados. No se desplegó la aplicación ni se aplicó la migración a producción. No se ejecutaron verificaciones biométricas ni firmas reales.
+Estado verificado el 15 de septiembre de 2026.
 
-La última consulta remota a Supabase fue bloqueada por la revisión automática al alcanzar su límite de uso. No se intentó eludir ese bloqueo.
+## Despliegue realizado
 
-## Cambios implementados
+Publicado en https://vivat.com.ar. Despliegue Vercel: `dpl_GngYc4vQNvqJJ4SCdRPeivc48h66`, proyecto `app-alquileres-3-0`, equipo Vivat. Se compiló primero sin cambiar el dominio y se promovió después de comprobar los controles de acceso, la clave pública y el webhook.
 
-- `/api/firmas/partes` devuelve exclusivamente la identidad de las partes de contratos del usuario autenticado. No amplía las políticas de acceso a `Perfil`.
-- La bandeja de notificaciones se consulta por destinatario y se conserva por cuenta, sin filtrar por el panel activo. La lectura se guarda en Supabase y se sincroniza entre paneles.
-- Firma con consentimiento, sesión Didit vinculada al contrato y al perfil, comprobación de documento, prueba de vida, comparación facial y coincidencia del DNI. Webhooks y consultas de estado confirman la decisión contra Didit.
-- Las sesiones pendientes se pueden retomar. Las sesiones antiguas sin versión del contrato se reemplazan conservando sus registros.
-- El PDF usa las cláusulas guardadas. No inventa DNI, CUIL, importe, sesión, IP ni puntaje biométrico. Los certificados descargados provienen del servidor.
-- La vista previa genera el PDF completo con sus anexos antes de habilitar el consentimiento. El inicio reconstruye el documento y compara su SHA-256 con el PDF aceptado; si cambió, exige revisarlo otra vez. La firma guarda la huella y la ruta del archivo, y el sellado descarga y verifica esos mismos bytes. Previsualizar no modifica el contrato ni inicia Didit.
-- Se verifica que las firmas correspondan al mismo PDF y que los archivos no hayan cambiado antes de consolidarlos. Se comprueban también las firmas de garantes antes de activar el contrato.
+Se aplicaron y verificaron las migraciones:
+- `signature_session_integrity`: unicidad de nuevas sesiones y firmantes activos.
+- `contract_signing_evidence_and_guarantors`: participantes fijos por contrato, protección de evidencia sellada y activación que exige todas las firmas.
+- `secure_marketplace_update_rpc`: corrección adicional de una función de publicaciones que no validaba la propiedad del recurso. Ahora exige los mismos permisos de propiedad que las tablas y rechaza llamadas anónimas.
 
-## Didit
+Las claves privadas y secretos se cargaron como secretos de producción en Vercel. Los archivos locales de configuración, las claves y los scripts de aprovisionamiento se excluyeron del paquete de despliegue. Las rutas inexistentes devuelven la portada por la configuración de Vercel; se comprobó que las rutas de secretos devolvieran exactamente esa página pública, sin el contenido del archivo privado.
 
-El identificador de firma que estaba en la configuración local devolvía HTTP 404. Se consultaron los workflows de la cuenta mediante la API de lectura. El flujo existente `firma electronica` es de autenticación biométrica y requiere una referencia facial. Su uso con una foto del pasaporte quedó descartado por una restricción de aprobación automática sobre reutilización de datos biométricos.
+El despliegue usa el contenido local de este trabajo. Conservar estos cambios en Git antes del próximo despliegue automático para no reemplazar el código publicado por una versión anterior.
 
-El código implementado utiliza una **verificación nueva de documento y rostro**, aportados directamente por el firmante a Didit. La configuración local apunta al workflow KYC completo y publicado de la cuenta (`pasaporte`); sus identificadores permanecen en `.env`, fuera del código y de Git. Para producción se debe configurar `DIDIT_WORKFLOW_ID_SIGNATURE` con un workflow que incluya OCR/documento, LIVENESS y FACE_MATCH.
+## Qué hace la firma
 
-Configurar en el entorno de despliegue:
+1. El participante autenticado abre el contrato y revisa el PDF completo con sus anexos.
+2. El servidor registra la versión del consentimiento y compara la huella SHA-256 con el PDF revisado.
+3. Didit solicita nuevos documentos y capturas directamente al firmante. El servidor exige aprobación de documento, prueba de vida y comparación facial, workflow correcto y DNI coincidente.
+4. La sesión queda vinculada al contrato, perfil, participación y huella del PDF.
+5. El servidor genera la auditoría y un registro de evidencia firmado por Vivat mediante Ed25519.
+6. Cuando firman inquilino, propietario y todos los garantes fijados para el contrato, se consolida el PDF y se activa el contrato.
 
-- `DIDIT_API_KEY`: clave privada de la cuenta.
-- `DIDIT_WORKFLOW_ID_SIGNATURE`: UUID del workflow KYC completo que se usará para la firma.
-- `DIDIT_SIGNATURE_WEBHOOK_SECRET`: secreto de la entrega del webhook (o el secreto compartido existente mediante `DIDIT_WEBHOOK_SECRET`).
-- `APP_URL`: origen público canónico de la aplicación.
-- Webhook: `/api/firmas/webhook-didit` del origen público. Comprobar la entrega y sus firmas HMAC en Didit. La consulta de estado puede confirmar decisiones aunque el webhook se demore.
+Las sesiones pendientes pueden retomarse. Repetir una firma sellada conserva su evidencia. Los archivos se guardan con nombres derivados de su contenido; un conflicto de carga solo se admite si los bytes coinciden.
 
-Referencias: [crear sesión](https://docs.didit.me/sessions-api/create-session), [consultar decisión](https://docs.didit.me/sessions-api/retrieve-session), [webhooks](https://docs.didit.me/integration/webhooks).
+La tarjeta del propietario usa su perfil real a través del endpoint autorizado de participantes. Las notificaciones se consultan por destinatario, sin depender del panel activo, y la lectura se guarda y sincroniza por cuenta.
 
-## Cómo obtener el TSA
+## Registro propio sin AC ni TSA externo
 
-El TSA es una capa de evidencia temporal independiente; no identifica al firmante ni transforma por sí solo la firma electrónica en firma digital. El artículo 5 de la [Ley 25.506](https://www.argentina.gob.ar/normativa/nacional/70749/texto) establece que, si se desconoce la firma electrónica, quien la invoca debe acreditar su validez. El requerimiento de TSA del código es una decisión técnica, no una conclusión de obligatoriedad legal universal. Para un piloto puede evaluarse un circuito sin TSA con revisión jurídica y mensajes transparentes; esa modalidad no se habilitó en este cambio. Para contratos operados a escala se recomienda conservar evidencia temporal independiente.
+El circuito está configurado **sin autoridad certificante ni TSA externo**. El registro firmado declara expresamente:
+- Emisor: Vivat.
+- Fecha: reloj del servidor de Vivat.
+- Tipo: `vivat.server-evidence.v1`.
+- `independent_timestamp: false`.
 
-Para Vivat se puede solicitar una propuesta de integración a [CertiSur](https://www.certisur.com/servicio-timestamp/), que ofrece automatización del sellado de documentos. Como alternativa, [GlobalSign](https://www.globalsign.com/en/timestamp-service) ofrece un servicio de timestamp compatible con RFC 3161.
+La firma criptográfica permite comprobar que una copia de la evidencia fue emitida con la clave de Vivat y que sus datos y PDFs asociados no cambiaron. **No demuestra por sí sola la hora real frente a Vivat**, que controla tanto el reloj como la clave. Una autoridad externa añade independencia temporal.
 
-Texto para solicitar una cotización (no enviado):
+No se presenta este registro como token RFC 3161, firma PAdES, certificado licenciado o firma digital personal del firmante. El PDF contiene el contrato y las auditorías; la evidencia criptográfica se descarga por separado como JSON. Adobe no mostrará una firma digital certificada por este mecanismo.
 
-> Necesitamos integrar sellado de tiempo en una plataforma de contratos de alquiler. Solicitamos acceso de pruebas y producción compatible con RFC 3161 y SHA-256, documentación de API, autenticación, cadena de certificados, política de sellado, SLA, límites y precio por sello. Nuestro backend utiliza Node.js en Vercel. Buscamos enviar únicamente la huella del documento y conservar el token para verificación independiente.
+El campo histórico de base de datos `tsa_sello_tiempo` conserva su nombre por compatibilidad, pero para nuevas firmas guarda la estructura explícita de evidencia interna. No contiene un token TSA inventado.
 
-Solicitar y guardar:
+El TSA ya no es una dependencia técnica del circuito. La [Ley 25.506, artículo 5](https://www.argentina.gob.ar/normativa/nacional/ley-25506-70749/actualizacion) contempla que quien invoca una firma electrónica debe acreditar su validez si es desconocida. Esta implementación no transforma automáticamente esa firma en firma digital licenciada. Los requisitos operativos de un servicio de tiempo confiable incluyen más que firmar una fecha; véase [RFC 3628](https://www.rfc-editor.org/rfc/rfc3628.html).
 
-1. Endpoint de pruebas y producción, documentación y método de autenticación.
-2. Certificados raíz e intermedios confiables, política de sellado y procedimiento de renovación.
-3. Condiciones de disponibilidad, límites, costos y retención de evidencia.
+## Didit: configurado y cómo administrarlo
 
-**La aplicación actual espera un gateway JSON, no una URL RFC 3161 binaria.** `TSA_SERVER_URL` y `TSA_SERVER_API_KEY` no son credenciales universales de cualquier TSA. Una vez elegido el proveedor, hay que adaptar `issueTrustedTimestamp` en `services/firmas/sellar.js`, o implementar el gateway del siguiente contrato:
+El workflow de firma configurado está publicado y contiene OCR, LIVENESS, FACE_MATCH e IP_ANALYSIS. Se usa el KYC completo existente de la cuenta. No se reutiliza ni exporta una fotografía anterior del pasaporte como referencia facial.
 
-```http
-POST /timestamp
-Authorization: Bearer <secreto del gateway>
-Content-Type: application/json
+Se creó y activó el destino:
+- URL: `https://vivat.com.ar/api/firmas/webhook-didit`.
+- Versión: v3.
+- Eventos: `status.updated` y `data.updated`.
+- Secreto: el `secret_shared_key` de ese destino, guardado en `DIDIT_SIGNATURE_WEBHOOK_SECRET`.
+- El destino anterior de identidad permanece configurado.
 
-{"hash_algorithm":"SHA-256","hash":"<64 caracteres hexadecimales>"}
+Para administrar la configuración:
+1. Ingresar en [Didit Business Console](https://business.didit.me/).
+2. En Workflows, abrir el flujo KYC completo, comprobar OCR/documento, Liveness y Face Match y que esté publicado. Copiar su UUID.
+3. En Settings → API & Webhooks, administrar la clave privada de la aplicación y el destino de contratos.
+4. En Vercel → proyecto → Settings → Environment Variables → Production, mantener los siguientes valores:
+
+| Variable | Valor que corresponde |
+| --- | --- |
+| `DIDIT_API_KEY` | Clave privada de la aplicación Didit |
+| `DIDIT_WORKFLOW_ID_SIGNATURE` | UUID del KYC completo publicado |
+| `DIDIT_SIGNATURE_WEBHOOK_SECRET` | Secreto del destino de contratos, no el de otro destino |
+| `APP_URL` | `https://vivat.com.ar` |
+| `SIGNATURE_EVIDENCE_PRIVATE_KEY_B64` | Clave Ed25519 privada generada para Vivat |
+| `SIGNATURE_EVIDENCE_ARCHIVED_PUBLIC_KEYS` | Array JSON de claves públicas antiguas; inicialmente `[]` |
+
+Los cambios de variables requieren un nuevo despliegue. No poner secretos en código, en el frontend, en Git ni en mensajes.
+
+En Vercel se verificó el HMAC V2 sobre JSON canónico; acepta el mensaje firmado de una sesión sintética inexistente como ignorado y rechaza una firma alterada. Didit envía `X-Signature-V2`; se utiliza porque el entorno puede entregar el cuerpo JSON ya procesado. El backend también consulta la decisión auténtica de Didit, por lo que un mensaje del navegador no puede aprobar una firma.
+
+Referencias: [crear sesión](https://docs.didit.me/sessions-api/create-session), [destinos de webhook](https://docs.didit.me/management-api/webhook/create-destination), [firmas HMAC](https://docs.didit.me/integration/webhooks).
+
+## Garantes
+
+La pantalla `/firmar.html` permite firmar a las tres clases de participantes. Los garantes acceden con una cuenta cuyo email fue confirmado por Supabase Auth y coincide con la invitación; antes de vincularla definitivamente se comprueba el DNI.
+
+Al iniciar la primera firma se fijan los garantes del contrato. Agregar o modificar garantes del pasaporte después no modifica el instrumento ya aceptado. Cada garante debe ser una persona distinta de las partes y de los otros garantes, con nombre, DNI y email completos.
+
+No se inventan los datos faltantes. Un garante de prueba o incompleto debe corregirse antes de iniciar la firma. Los contratos con documentos aceptados de la implementación anterior exigen revisión de versión; no se sobrescribe ni se borra su evidencia histórica.
+
+## Custodia y verificación independiente
+
+La clave privada inicial está en `.env.signing.local`, ignorado por Git, y en los secretos de producción de Vercel. Conservar una copia segura bajo control de Vivat. No regenerarla en cada despliegue.
+
+La clave pública puede descargarse desde la pantalla de firma o consultarse en `/api/firmas/claves`. Huella SHA-256 de la clave inicial:
+`e952a0376368ddef5069d0b0af09fe9d5624d6806f9825ad0dde16ee330c8045`.
+
+Cada parte debe conservar juntos:
+- PDF original.
+- PDF de auditoría de cada firmante.
+- JSON de evidencia correspondiente.
+- Clave pública de Vivat obtenida y retenida por un canal confiable.
+- PDF final consolidado.
+
+Verificar una evidencia desde la carpeta del proyecto:
+
+```powershell
+node scripts/verify-signature-evidence.mjs evidencia.json clave-publica.pem contrato-original.pdf auditoria.pdf
 ```
 
-```json
-{
-  "timestamp_token": "<token RFC 3161 codificado>",
-  "gen_time": "<fecha emitida por el TSA>",
-  "authority": "<autoridad verificada>",
-  "serial_number": "<número emitido por el TSA>"
-}
+El verificador exige una clave pública confiable proporcionada por separado; no confía automáticamente en la clave incluida en el JSON. Comprueba firma criptográfica y huellas de los archivos. Esto no certifica la independencia de la fecha.
+
+Al rotar la clave, conservar la pública anterior en `SIGNATURE_EVIDENCE_ARCHIVED_PUBLIC_KEYS` para seguir verificando contratos existentes. Mantener copias de seguridad de la base de datos y de los objetos almacenados; una clave pública sola no recupera documentos perdidos.
+
+## Verificación y límites pendientes
+
+- 52 pruebas del circuito de firma, permisos, notificaciones, correos, carga de iconos y límite de funciones: aprobadas.
+- Prueba integrada con servicios simulados: tres participantes, mismo PDF, espera del garante, reintentos, consentimiento incorrecto, DNI distinto, contrato cancelado y archivo alterado.
+- PDF sintético generado y revisado visualmente: contrato y auditoría legibles, sin recortes.
+- Compilación local y compilación en Vercel: correctas. Aviso no bloqueante de Browserslist desactualizado.
+- Comprobaciones HTTP en el dominio público: página, clave pública, endpoints protegidos, HMAC válido/inválido y ausencia de exposición de archivos privados.
+- Permisos y migraciones comprobados en Supabase. La nueva tabla de garantes tiene RLS y no concede acceso directo a `anon` o `authenticated`.
+- No se crearon firmas reales ni se modificaron contratos de usuarios durante las comprobaciones.
+- La suite general del repositorio conserva 16 fallos en pruebas de la portada: selectores de tarjetas, simulación de temporizadores/resize y orden de carga. Sus archivos de prueba y de implementación no fueron cambiados por este trabajo. No se declara esa suite completamente aprobada.
+- Falta una prueba de aceptación con un firmante real completando Didit, regreso a Vivat y descarga final desde la interfaz. `AGENTS.md` impide las pruebas automáticas de navegador; no se abrió Chrome para probar.
+- La comprobación HMAC sintética no equivale a una entrega real de Didit. Revisar la entrega en la consola después de la primera verificación real.
+- Supabase mantiene otros avisos preexistentes: extensión `pg_net` en public y protección contra contraseñas filtradas desactivada. La ausencia de políticas en `Contrato_Garante` es intencional: solo el backend con autorización de participantes accede a ella. Referencias del asesor: [RLS sin política](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy), [extensiones](https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public), [contraseñas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+## CLI de Vercel
+
+No hace falta descargar un instalador separado. Con Node.js instalado, PowerShell puede ejecutar:
+
+```powershell
+npx --yes vercel login
 ```
 
-El gateway debe verificar el estado de la respuesta RFC 3161, la firma criptográfica, el certificado de la autoridad y su uso de timestamp, la cadena de confianza y la coincidencia del hash y nonce. No basta con devolver estos campos como texto. No enviar contratos, documentos de identidad ni imágenes al TSA: la solicitud de timestamp solo necesita la huella.
-
-El servicio aún no está contratado ni configurado. La aplicación bloquea el inicio cuando falta esta configuración para evitar que el usuario complete Didit y falle recién al sellar. No hay tokens TSA de ejemplo ni un modo de aprobación simulada.
-
-## Pendientes antes de habilitar contratos
-
-1. Contratar y conectar el TSA con verificación criptográfica real de su respuesta. El gateway anterior sigue siendo una dependencia externa sin implementar/configurar.
-2. Aplicar `supabase/migrations/20260914150119_signature_session_integrity.sql`. Impide duplicados en sesiones nuevas con evidencia de consentimiento. Se detectaron dos grupos históricos de sesiones/firmantes duplicados y no se alteraron sus registros.
-3. Completar el circuito de firma autenticada de garantes. El endpoint actual de inicio autoriza a propietario e inquilino; el portal de garantes existente verifica identidad, pero no completa una firma contractual. Un contrato con garantes pendientes no se activa. También se necesita definir una asociación estable de garantes por contrato; el modelo actual los obtiene a través del pasaporte del inquilino.
-4. Verificar en un contrato de prueba la vista previa, documento e identidades del primer firmante, la firma de todas las partes y la descarga final. Revisar recuperación tras cierre de la pantalla, webhook repetido, caída del TSA y doble solicitud simultánea.
-5. Verificar retención y descarga independiente del token TSA y su asociación con el certificado de auditoría. Actualmente se guarda en `Firma_contrato.tsa_sello_tiempo`; no se inserta como firma PAdES ni como DocTimeStamp de Adobe dentro del PDF.
-6. Desplegar código y variables de entorno. Los resultados locales no demuestran el funcionamiento del entorno de producción.
-7. Los contratos con un PDF original de la implementación anterior requieren revisión de versión; no se sobrescribe su evidencia. Un PDF aceptado que difiera de las condiciones actuales bloquea una nueva firma hasta revisar el contrato y conservar correctamente sus antecedentes.
-
-## Verificación realizada
-
-Pruebas automatizadas con datos simulados: decisiones Didit incompletas, workflow incorrecto, DNI distinto, rechazo, expiración, autenticidad y antigüedad de webhook, sesiones selladas, revisión contractual, integridad de PDFs, reintentos de carga, identidad de participantes, bandeja entre roles, cambio de cuenta, bandeja vacía y fallo al guardar lectura. También se ejecuta la suite previa del proyecto.
-
-Se respeta `AGENTS.md`: no se abrió Chrome ni se realizaron pruebas automáticas de navegador. La revisión visual en escritorio y móvil y la prueba con proveedores reales permanecen pendientes.
-
-Resultado local: 35 pruebas aprobadas y `npm run build` completado. Incluye rechazo de consentimiento sin PDF o sobre un PDF modificado y conservación de un documento ya aceptado frente a intentos concurrentes. El compilador avisó que su base Browserslist está desactualizada; no impidió la compilación.
+Funciona desde cualquier carpeta e inicia sesión para el usuario de Windows. La sesión de `maximocirrin` quedó comprobada y este proyecto ya está vinculado. Documentación: [Vercel CLI](https://vercel.com/docs/cli). Si falta Node.js, usar el [instalador oficial](https://nodejs.org/en/download).

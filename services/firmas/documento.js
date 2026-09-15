@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { generateOriginalContractPdf } from './pdf-generator.js';
 import { contractRevision, uploadImmutable } from './integrity.js';
 import { isSafeStoragePath } from '../../api/_auth.js';
+import { contractGuarantors } from './participants.js';
 
 // Preview and consent use the same renderer and immutable, content-addressed file.
 // Merely previewing a document never changes the contract or creates a signature.
@@ -25,14 +26,7 @@ export async function prepareContractDocument(supabase, contract) {
     }));
     hydratedInventory = { ...inventory, items };
   }
-  const { data: passports, error: passportError } = await supabase.from('Pasaporte_vivat')
-    .select('id_pasaporte').eq('id_perfil', contract.id_perfil_inquilino);
-  if (passportError) throw passportError;
-  const ids = (passports || []).map(p => p.id_pasaporte);
-  const { data: guarantors, error: guarantorError } = ids.length
-    ? await supabase.from('Garante').select('*').in('id_pasaporte', ids).order('id_garante')
-    : { data: [] };
-  if (guarantorError) throw guarantorError;
+  const guarantors = await contractGuarantors(supabase, contract);
   const bytes = await generateOriginalContractPdf({ contractId: id, contrato: contract,
     propiedad: contract.Propiedad || {}, inquilino: contract.Inquilino || {},
     propietario: contract.Propietario || {}, garantes: guarantors || [], inventario: hydratedInventory });

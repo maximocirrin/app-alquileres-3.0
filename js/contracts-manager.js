@@ -1687,7 +1687,7 @@
                                     </div>
                                     <h4 class="font-headline font-bold text-base text-zinc-900 dark:text-white">Aún no hay contratos en esta sección</h4>
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-                                        Los contratos firmados electrónicamente con validación biométrica Didit aparecerán aquí con su historial inmutable de eventos, certificación TSA y descarga en PDF.
+                                        Los contratos firmados electrónicamente aparecerán aquí con su registro de evidencia y descarga en PDF.
                                     </p>
                                 </div>
                             ` : list.map(c => {
@@ -1907,7 +1907,7 @@
             const contractStatusBadge = (effectiveRole === 'TENANT' && !isContractGen)
                 ? { label: 'Contrato No Generado', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500 animate-pulse' }
                 : (isFullySigned(contract)
-                    ? { label: 'Sellado TSA', bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', dot: 'bg-emerald-500' }
+                    ? { label: 'Firma registrada', bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', dot: 'bg-emerald-500' }
                     : (hasAnySignature
                         ? { label: 'Firma Parcial', bg: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800', dot: 'bg-blue-500' }
                         : { label: 'Pendiente de Firma', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500 animate-pulse' }
@@ -1979,7 +1979,7 @@
                                 <span class="hidden sm:inline">PDF</span>
                             </button>
 
-                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="h-9 px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0 border border-zinc-800 dark:border-zinc-700" title="Audit Trail TSA">
+                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="h-9 px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0 border border-zinc-800 dark:border-zinc-700" title="Registro de evidencia">
                                 <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
                                 <span class="hidden sm:inline">Audit Trail</span>
                             </button>
@@ -2247,9 +2247,9 @@
                                         <!-- Hash Final Sellado (Nivel 2) -->
                                         <div class="p-3 bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200/80 dark:border-zinc-800 space-y-1">
                                             <div class="flex items-center justify-between">
-                                                <span class="font-bold text-zinc-600 dark:text-zinc-400">2. Hash Sellado (Audit Trail + TSA):</span>
+                                                <span class="font-bold text-zinc-600 dark:text-zinc-400">2. Hash Sellado (Documento y auditoría):</span>
                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold ${contract.finalHash || isFullySigned(contract) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'}">
-                                                    ${contract.finalHash || isFullySigned(contract) ? 'SELLADO TSA' : 'EN ESPERA DE FIRMA'}
+                                                    ${contract.finalHash || isFullySigned(contract) ? 'FIRMA REGISTRADA' : 'EN ESPERA DE FIRMA'}
                                                 </span>
                                             </div>
                                             <div class="flex items-center justify-between gap-1 font-mono text-[10px] text-zinc-800 dark:text-zinc-200">
@@ -2278,7 +2278,7 @@
                                             Validación Biométrica y Firma Electrónica
                                         </h3>
                                         <p class="text-xs text-zinc-500">
-                                            Suscripción digital segura con prueba de vida Didit Liveness Check y sellado legal TSA.
+                                            Firma electrónica con verificación de identidad Didit y registro de evidencia de Vivat.
                                         </p>
                                     </div>
                                 </div>
@@ -2339,7 +2339,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-headline font-bold text-sm text-emerald-950 dark:text-emerald-200">CONTRATO 100% FIRMADO Y SELLADO (Ley 25.506)</h4>
-                                                <p class="text-xs text-emerald-800 dark:text-emerald-400 mt-0.5">Ambas partes validaron su identidad con prueba de vida Didit Liveness y el documento cuenta con Time-Stamp TSA.</p>
+                                                <p class="text-xs text-emerald-800 dark:text-emerald-400 mt-0.5">Las firmas requeridas están registradas y el documento cuenta con evidencia emitida por Vivat.</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-2 shrink-0">
@@ -2347,7 +2347,7 @@
                                                 Descargar PDF
                                             </button>
                                             <button onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="px-4 py-2.5 bg-zinc-900 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
-                                                Audit Trail TSA
+                                                Registro de evidencia
                                             </button>
                                         </div>
                                     </div>
@@ -2359,6 +2359,7 @@
                                             </div>
 
                                             <button type="button" id="contract-preview-btn" onclick="ContractsManager.previewSignatureDocument('${contract.id}')" class="px-4 py-2.5 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-semibold">Revisar PDF antes de firmar</button>
+                                            <a href="firmar.html" class="text-sm underline">Firmas de garantes y descarga de evidencia</a>
                                             <p id="contract-preview-status" role="status" class="text-xs text-zinc-500">Abrí el documento completo para habilitar el consentimiento.</p>
                                             <div id="contract-preview-container" hidden>
                                                 <a id="contract-preview-link" target="_blank" rel="noopener noreferrer" class="text-sm underline">Abrir PDF en otra pestaña</a>
@@ -2368,7 +2369,7 @@
                                                 <input type="checkbox" id="legal-inpage-consent" disabled class="mt-0.5 w-5 h-5 rounded text-primary focus:ring-primary border-zinc-300 cursor-pointer" onchange="document.getElementById('inpage-sign-action-btn').disabled = !this.checked || !this.dataset.documentHash">
                                                 <div class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
                                                     <span class="font-bold text-zinc-900 dark:text-white block mb-0.5">Consentimiento Expreso de Firma Electrónica</span>
-                                                    He leído y acepto el PDF completo presentado, incluidos sus anexos. Consiento expresamente la firma electrónica y la verificación de mi documento y captura facial en vivo con Didit conforme a la <b>Ley 25.506</b>.
+                                                    <span id="signature-consent-text">Revisá el PDF para leer y aceptar el consentimiento de firma.</span>
                                                 </div>
                                             </label>
                                         </div>
@@ -3689,6 +3690,8 @@
                 document.getElementById('contract-preview-link').href = url.href;
                 document.getElementById('contract-preview-container').hidden = false;
                 consent.dataset.documentHash = result.data.hash;
+                consent.dataset.consentVersion = result.data.consent_version;
+                document.getElementById('signature-consent-text').textContent = result.data.consent_text;
                 consent.disabled = false;
                 status.textContent = 'Revisá el PDF y sus anexos antes de aceptar. El enlace está disponible durante 10 minutos.';
             } catch (error) {
@@ -3727,7 +3730,7 @@
                 ['status', 'didit_status', 'verification_status', 'session_id', 'sessionId'].forEach((key) => callback.searchParams.delete(key));
                 const started = await window.DataManager.iniciarFirmaContrato(
                     dbContractId,
-                    { consentGiven: true, documentHash: consentCheckbox.dataset.documentHash },
+                    { consentGiven: true, documentHash: consentCheckbox.dataset.documentHash, consentVersion: consentCheckbox.dataset.consentVersion },
                     callback.toString()
                 );
                 if (!started?.id_firma || !started?.didit_session_url || !started?.didit_session_id) {
@@ -3857,7 +3860,7 @@
                                     ¡Contrato Firmado Exitosamente!
                                 </h3>
                                 <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-                                    Tu validación biométrica facial Didit Liveness y firma han sido estampadas con Time-Stamp TSA bajo la <b>Ley Nacional N° 25.506</b>.
+                                    Tu firma electrónica quedó registrada con verificación de identidad Didit y evidencia firmada por Vivat. La fecha proviene del servidor de Vivat.
                                 </p>
                             </div>
                         </div>
@@ -3918,7 +3921,7 @@
                                 </button>
                                 <button type="button" onclick="document.getElementById('signature-success-modal').remove(); ContractsManager.downloadAuditTrail('${contract.id}');" class="w-full py-3 px-4 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                                     <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
-                                    <span>Audit Trail TSA</span>
+                                    <span>Registro de evidencia</span>
                                 </button>
                             </div>
 
@@ -4009,14 +4012,14 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-white">
                                         <span class="material-symbols-outlined text-emerald-500 text-base">lock</span>
-                                        <span>2. Digest SHA-256 Consolidado (Audit Trail + TSA):</span>
+                                        <span>2. Digest SHA-256 Consolidado (Documento y auditoría):</span>
                                     </div>
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold ${isSealed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200'} uppercase">
                                         ${isSealed ? 'Sellado Oficial' : 'Pendiente'}
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                    Calculado sobre el PDF definitivo con el Certificado de Auditoría Didit KYC y Sello de Tiempo RFC 3161 inyectados al final.
+                                    Calculado sobre el PDF definitivo con el contrato y los registros de auditoría de sus firmantes. La evidencia criptográfica se descarga por separado.
                                 </p>
                                 <div class="flex items-center justify-between gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                                     <span class="break-all select-all">${finHash}</span>

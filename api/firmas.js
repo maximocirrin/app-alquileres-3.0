@@ -3,6 +3,7 @@ import sellarHandler from '../services/firmas/sellar.js';
 import finalizarHandler from '../services/firmas/finalizar.js';
 import estadoHandler from '../services/firmas/estado.js';
 import partesHandler from '../services/firmas/partes.js';
+import evidenciasHandler from '../services/firmas/evidencias.js';
 import previsualizarHandler from '../services/firmas/previsualizar.js';
 import webhookDiditHandler from '../services/firmas/webhook-didit.js';
 import { sendOriginForbidden, setCorsHeaders } from './_auth.js';
@@ -12,6 +13,8 @@ import { sendOriginForbidden, setCorsHeaders } from './_auth.js';
 export const config = { api: { bodyParser: false } };
 
 const handlers = {
+  evidencias: evidenciasHandler,
+  claves: evidenciasHandler,
   previsualizar: previsualizarHandler,
   partes: partesHandler,
   iniciar: iniciarHandler,

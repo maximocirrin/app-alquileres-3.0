@@ -1,4 +1,6 @@
 import { prepareContractDocument } from './documento.js';
+import { getSigningContract } from './participants.js';
+import { CONSENT_TEXT, CONSENT_VERSION, EVIDENCE_NOTICE } from './evidence.js';
 import { readContractForSigning, uploadImmutable } from './integrity.js';
 import { consumeRateLimit, getAuthenticatedUser, getContractForProfile, getSupabaseAdmin,
   parsePositiveInteger, readJsonBody, requireProfile, sendForbidden, sendInternalError,
@@ -17,7 +19,7 @@ export default async function previsualizarHandler(req, res) {
     const id = parsePositiveInteger(body.id_contrato);
     if (!id) return res.status(400).json({ ok: false, message: 'Contrato inválido.' });
     const supabase = getSupabaseAdmin();
-    const { contract, role, error: accessError } = await getContractForProfile(supabase, id, profile.id_perfil);
+    const { contract, role, error: accessError } = await getSigningContract(supabase, id, profile, user);
     if (accessError) throw accessError;
     if (!contract || !role) return sendForbidden(res);
     if (!await consumeRateLimit(supabase, 'signature-preview', `${profile.id_perfil}:${id}`, 20, 3600)) return sendRateLimited(res);
@@ -25,7 +27,7 @@ export default async function previsualizarHandler(req, res) {
     await uploadImmutable(supabase, document.path, document.bytes);
     const { data, error: urlError } = await supabase.storage.from('contratos_firmados').createSignedUrl(document.path, 600);
     if (urlError || !data?.signedUrl) throw urlError || new Error('Preview unavailable.');
-    return res.status(200).json({ ok: true, data: { url: data.signedUrl, hash: document.hash, revision: document.revision } });
+    return res.status(200).json({ ok: true, data: { url: data.signedUrl, hash: document.hash, revision: document.revision, role, consent_version: CONSENT_VERSION, consent_text: CONSENT_TEXT, evidence_notice: EVIDENCE_NOTICE } });
   } catch (error) {
     if (error.code === 'CONTRACT_INCOMPLETE') return res.status(422).json({ ok: false, message: error.message });
     return sendInternalError(res, 'firmas/previsualizar', error);

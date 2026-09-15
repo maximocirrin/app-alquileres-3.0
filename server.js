@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,6 +7,8 @@ import { sendOriginForbidden, setCorsHeaders } from './api/_auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Local provisioning only; deployed services receive this key through the environment.
+dotenv.config({ path: path.join(__dirname, '.env.signing.local'), quiet: true });
 const app = express();
 const port = Number(process.env.PORT || 3000);
 
@@ -31,7 +34,7 @@ function securityHeaders(req, res, next) {
     "img-src 'self' data: blob: https: https://images.unsplash.com https://api.qrserver.com https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.google.com https://*.hcaptcha.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verification.didit.me https://api.didit.me https://maps.googleapis.com https://*.googleapis.com https://api.bcra.gob.ar https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://*.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://api.hcaptcha.com https://api2.hcaptcha.com https://*.hcaptcha.com",
-    "frame-src https://didit.me https://*.didit.me https://js.hcaptcha.com https://newassets.hcaptcha.com https://*.hcaptcha.com",
+    "frame-src 'self' https://*.supabase.co https://didit.me https://*.didit.me https://js.hcaptcha.com https://newassets.hcaptcha.com https://*.hcaptcha.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

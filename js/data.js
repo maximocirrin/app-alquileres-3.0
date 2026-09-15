@@ -5517,6 +5517,7 @@ var DataManager = {
             id_contrato: Number(idContrato),
             consentGiven: metadata.consentGiven === true,
             documentHash: metadata.documentHash,
+            consentVersion: metadata.consentVersion,
             metadata: {
                 userAgent: navigator.userAgent,
                 geolocation: metadata.geolocation || null,
