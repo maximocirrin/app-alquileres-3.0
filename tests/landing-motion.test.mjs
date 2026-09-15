@@ -13,13 +13,20 @@ function setup({ reduced = false, supportsObserver = true, width = 1280, height 
     let intersect;
     const observerOptions = [];
     const windowEvents = {};
+    const animationFrames = [];
     const document = {
         body: { classList: { contains: () => true } },
         readyState: 'complete',
         querySelectorAll: () => elements,
         addEventListener: (name, callback) => { events[name] = callback; }
     };
-    const window = { innerHeight: height, innerWidth: width, matchMedia: () => preference, addEventListener: (name, fn) => { windowEvents[name] = fn; } };
+    const window = {
+        innerHeight: height,
+        innerWidth: width,
+        matchMedia: () => preference,
+        addEventListener: (name, fn) => { windowEvents[name] = fn; },
+        requestAnimationFrame: callback => { animationFrames.push(callback); }
+    };
     class Observer {
         constructor(callback, options) { intersect = callback; observerOptions.push(options); }
         observe(element) { observed.add(element); }
@@ -49,7 +56,10 @@ function setup({ reduced = false, supportsObserver = true, width = 1280, height 
         elements.push(node);
         return { node, classes, animations };
     }
-    return { window, document, preference, element, observed, events, observerOptions, windowEvents, enter: node => intersect([{ target: node, isIntersecting: true }]) };
+    const flushAnimationFrames = () => {
+        while (animationFrames.length) animationFrames.splice(0).forEach(callback => callback());
+    };
+    return { window, document, preference, element, observed, events, observerOptions, windowEvents, flushAnimationFrames, enter: node => intersect([{ target: node, isIntersecting: true }]) };
 }
 
 test('offscreen content reveals once and retains the dynamic catalog observer hook', () => {
@@ -69,6 +79,8 @@ test('offscreen content reveals once and retains the dynamic catalog observer ho
     assert.equal(card.animations.length, 1);
     card.animations[0].finish();
     assert.ok(!card.classes.has('landing-reveal-pending'));
+    assert.ok(!card.animations[0].cancelled, 'keep the final frame stable until CSS has painted');
+    env.flushAnimationFrames();
     assert.ok(card.animations[0].cancelled, 'release the animation so hover can work normally');
 });
 
