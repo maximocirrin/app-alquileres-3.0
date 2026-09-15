@@ -29,14 +29,16 @@ function setup({ reduced = false, supportsObserver = true, width = 1280, height 
     if (supportsObserver) window.IntersectionObserver = Observer;
     runInNewContext(source, { window, document, IntersectionObserver: Observer });
 
-    function element({ top = 1000, excluded = false, nested = false, benefit = true, editorial = false } = {}) {
+    function element({ top = 1000, excluded = false, nested = false, benefit = true, editorial = false, className = '' } = {}) {
         const classes = new Set();
         const animations = [];
         const node = {
+            className,
             classList: { add: name => classes.add(name), remove: name => classes.delete(name) },
             matches: () => editorial,
             parentElement: { closest: () => nested, matches: () => benefit },
             closest: selector => selector === 'main' ? {} : excluded,
+            querySelector: () => nested ? {} : null,
             getBoundingClientRect: () => ({ top }),
             animate(frames, options) {
                 const animation = { frames, options, finish() { this.finished = true; this.onfinish?.(); }, cancel() { this.cancelled = true; this.oncancel?.(); } };
@@ -70,16 +72,28 @@ test('offscreen content reveals once and retains the dynamic catalog observer ho
     assert.ok(card.animations[0].cancelled, 'release the animation so hover can work normally');
 });
 
-test('initial viewport, hero/catalog exclusions and non-target sections do not animate', () => {
+test('explicit targets animate in the viewport while excluded landing widgets stay static', () => {
     const env = setup();
-    for (const options of [{ top: 100 }, { excluded: true }, { benefit: false }]) {
-        const card = env.element(options);
-        env.window.marketplaceObserver.observe(card.node);
-        assert.ok(card.classes.has('is-visible'));
-        assert.ok(!card.classes.has('landing-reveal-pending'));
-        assert.equal(card.animations.length, 0);
-        assert.ok(!env.observed.has(card.node));
-    }
+    const hero = env.element({ top: 100, className: 'animate-on-scroll delay-150' });
+    env.window.marketplaceObserver.observe(hero.node);
+    assert.equal(hero.animations.length, 1);
+    assert.equal(hero.animations[0].options.delay, 150);
+    assert.ok(!env.observed.has(hero.node));
+
+    const excluded = env.element({ excluded: true });
+    env.window.marketplaceObserver.observe(excluded.node);
+    assert.equal(excluded.animations.length, 0);
+    assert.ok(!env.observed.has(excluded.node));
+
+    const section = env.element({ benefit: false });
+    env.window.marketplaceObserver.observe(section.node);
+    assert.ok(env.observed.has(section.node));
+    env.enter(section.node);
+    assert.equal(section.animations.length, 1);
+
+    const nestedContainer = env.element({ nested: true });
+    env.window.marketplaceObserver.observe(nestedContainer.node);
+    assert.equal(nestedContainer.animations.length, 0, 'avoid compounding a child reveal with its parent');
 });
 
 test('reduced motion and missing IntersectionObserver leave content immediately readable', () => {

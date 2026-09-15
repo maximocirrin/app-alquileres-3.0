@@ -98,8 +98,9 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
-    <link rel="stylesheet" href="css/style.css?v=32">
-    <script defer src="js/landing-motion.js?v=10"></script>
+    <link rel="stylesheet" href="css/style.css?v=33">
+    <noscript><style>.animate-on-scroll { opacity: 1 !important; transform: none !important; }</style></noscript>
+    <script defer src="js/landing-motion.js?v=11"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -196,7 +197,7 @@
             </div>
 
             <!-- Persona Selector (Segmented Pill) -->
-            <div class="premium-persona-nav relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
+            <div class="premium-persona-nav relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4 animate-on-scroll">
                 <nav class="inline-flex items-center p-1 rounded-full bg-black/40 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-lg" aria-label="Seleccionar perfil">
                     <a href="index.html"
                         class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
@@ -214,12 +215,12 @@
             </div>
 
             <div class="premium-hero-content relative z-10 w-full max-w-5xl px-4 sm:px-6 text-center">
-                <span class="premium-eyebrow">Vivat para inmobiliarias</span>
+                <span class="premium-eyebrow animate-on-scroll">Vivat para inmobiliarias</span>
                 <h1
-                    class="premium-hero-title font-headline text-white animate-on-scroll">
+                    class="premium-hero-title font-headline text-white animate-on-scroll delay-75">
                     Más capacidad para operar.<br><span>La misma atención de siempre.</span>
                 </h1>
-                <p class="premium-hero-lede font-body text-zinc-200/90 max-w-2xl mx-auto animate-on-scroll delay-100">
+                <p class="premium-hero-lede font-body text-zinc-200/90 max-w-2xl mx-auto animate-on-scroll delay-150">
                     Vivat conecta cartera, candidatos, contratos, cobranzas y equipo para que cada persona sepa qué
                     sigue y cada operación avance.
                 </p>
@@ -235,7 +236,7 @@
                         <span>Conocé las funciones</span>
                     </a>
                 </div>
-                <div class="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-zinc-300 font-medium animate-on-scroll delay-300">
+                <div class="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-zinc-300 font-medium animate-on-scroll delay-250">
                     <span class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-green-400 text-base sm:text-lg">check_circle</span>
                         Panel centralizado
@@ -254,7 +255,7 @@
 
         <section class="landing-journey" aria-label="Tu operación inmobiliaria en tres pasos">
             <ol class="landing-journey-steps">
-                <li class="animate-on-scroll">
+                <li>
                     <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
                     <span class="landing-journey-number" aria-hidden="true">01</span>
                     <div>
@@ -262,7 +263,7 @@
                         <p>Propiedades, clientes y equipo en sintonía.</p>
                     </div>
                 </li>
-                <li class="animate-on-scroll delay-100">
+                <li>
                     <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4-1 12-12a2.1 2.1 0 0 0-3-3L5 16zM13 20h7"/></svg></span>
                     <span class="landing-journey-number" aria-hidden="true">02</span>
                     <div>
@@ -270,7 +271,7 @@
                         <p>De la postulación al contrato firmado online.</p>
                     </div>
                 </li>
-                <li class="animate-on-scroll delay-200">
+                <li>
                     <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v4H8zM8 5H5v16h14V5h-3M8 12h8M8 16h5"/></svg></span>
                     <span class="landing-journey-number" aria-hidden="true">03</span>
                     <div>
