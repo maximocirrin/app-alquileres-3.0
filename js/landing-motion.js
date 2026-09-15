@@ -1,146 +1,207 @@
-/* One-time, progressive reveals. Content remains readable if enhancement fails. */
+/* One-time, progressive reveals. Content stays readable if enhancement fails. */
 (() => {
     'use strict';
 
     function init() {
-        if (!document.body.classList.contains('landing-premium') && !document.querySelector('.animate-on-scroll')) return;
+        if (!document.body?.classList.contains('landing-premium')) return;
 
         const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
         const seen = new WeakSet();
-        const pendingElements = new Set();
+        const running = new Map();
+        const pending = new Set();
         const editorialTargets = '.premium-section-heading, .owner-premium-overview > .text-center, #funciones-corredor > div > .text-center, #seccion-garantia > div > h2, .broker-network h2, .broker-manifesto h2, .broker-final-cta > h2';
         let observer = null;
 
-        function reveal(element) {
-            if (!element || seen.has(element)) return;
-            seen.add(element);
-            pendingElements.delete(element);
-            observer?.unobserve(element);
+        function show(element) {
             element.classList.remove('landing-reveal-pending');
             element.classList.add('is-visible');
+            pending.delete(element);
         }
 
-        // Reliable check based on bounding rect (handles iOS Safari momentum scroll & toolbar collapse)
-        function checkPendingVisibility() {
-            if (pendingElements.size === 0) return;
-            const vh = window.innerHeight || document.documentElement?.clientHeight || 800;
-            const threshold = vh + 80;
-            pendingElements.forEach(element => {
-                try {
-                    const rect = element.getBoundingClientRect();
-                    if (rect.top <= threshold && rect.bottom >= -80) {
-                        reveal(element);
-                    }
-                } catch {
-                    reveal(element);
-                }
-            });
+        function finish(element) {
+            const animation = running.get(element);
+            if (animation) animation.finish();
+            running.delete(element);
+            show(element);
         }
 
-        // Initialize single IntersectionObserver with threshold 0 and positive rootMargin.
-        if ('IntersectionObserver' in window && !preference.matches) {
-            observer = new IntersectionObserver(entries => {
+        function getDelay(element) {
+            const match = String(element.className || '').match(/(?:^|\s)delay-(\d+)(?:\s|$)/);
+            return match ? Number(match[1]) : 0;
+        }
+
+        function reveal(element) {
+            if (!element) return;
+            element.classList.add('is-visible');
+            observer?.unobserve(element);
+            if (seen.has(element)) {
+                finish(element);
+                return;
+            }
+
+            seen.add(element);
+            if (preference.matches || typeof element.animate !== 'function') {
+                show(element);
+                return;
+            }
+
+            try {
+                const options = {
+                    duration: window.innerWidth < 700 ? 850 : 700,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                    fill: 'both'
+                };
+                const delay = getDelay(element);
+                if (delay > 0) options.delay = delay;
+
+                const animation = element.animate(
+                    [
+                        { opacity: 0, transform: 'translateY(20px)' },
+                        { opacity: 1, transform: 'translateY(0)' }
+                    ],
+                    options
+                );
+                running.set(element, animation);
+                animation.oncancel = () => {
+                    running.delete(element);
+                    show(element);
+                };
+                animation.onfinish = () => {
+                    show(element);
+                    running.delete(element);
+                    // Release the WAAPI transform so card and button hover states work normally.
+                    animation.cancel();
+                };
+            } catch {
+                show(element);
+            }
+        }
+
+        function triggerInset() {
+            return window.innerWidth < 700 ? Math.round(window.innerHeight * 0.25) : 24;
+        }
+
+        function configureObserver() {
+            observer?.disconnect();
+            observer = null;
+            if (!('IntersectionObserver' in window) || preference.matches) return;
+
+            const inset = triggerInset();
+            observer = new IntersectionObserver((entries) => {
                 for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        reveal(entry.target);
-                    }
+                    if (entry.isIntersecting) reveal(entry.target);
                 }
             }, {
                 threshold: 0,
-                rootMargin: '0px 0px 80px 0px'
+                rootMargin: `0px 0px -${inset}px 0px`
             });
-        }
 
-        // Keep the existing catalog hook compatible with dynamically inserted cards.
-        window.marketplaceObserver = {
-            observe(element) {
-                if (!element || seen.has(element)) return;
-                const vh = window.innerHeight || document.documentElement?.clientHeight || 800;
-                let isOffscreen = false;
+            for (const element of pending) {
+                if (!seen.has(element)) observer.observe(element);
+            }
+        }
+        configureObserver();
+
+        // Bounding-rect fallback covers iOS momentum scrolling and dynamic toolbar resizes.
+        function revealVisiblePending() {
+            const trigger = window.innerHeight - triggerInset();
+            for (const element of pending) {
+                if (seen.has(element)) continue;
                 try {
                     const rect = element.getBoundingClientRect();
-                    isOffscreen = rect.top > vh - 20;
+                    if (rect.top <= trigger) reveal(element);
+                } catch {
+                    reveal(element);
+                }
+            }
+        }
+
+        function isExcluded(element) {
+            const nestedTarget = element.querySelector?.('.animate-on-scroll');
+            const excludedArea = element.closest?.('.premium-proof-rail, .landing-journey, #landing-featured-properties-section');
+            const hidden = element.closest?.('[hidden], .hidden');
+            return Boolean(nestedTarget || excludedArea || hidden || !element.closest?.('main'));
+        }
+
+        // Keep the existing hook used by dynamically inserted marketplace cards.
+        window.marketplaceObserver = {
+            observe(element) {
+                if (!element) return;
+                // App view switches may remove this class before registering an already-seen node.
+                element.classList.add('is-visible');
+                if (seen.has(element)) return;
+
+                if (!observer || preference.matches || typeof element.animate !== 'function' || isExcluded(element)) {
+                    seen.add(element);
+                    show(element);
+                    return;
+                }
+
+                const trigger = window.innerHeight - triggerInset();
+                let shouldReveal = true;
+                try {
+                    const rect = element.getBoundingClientRect();
+                    shouldReveal = rect.top <= trigger;
                 } catch { }
 
-                if (!observer || preference.matches || !isOffscreen) {
+                if (shouldReveal) {
                     reveal(element);
                     return;
                 }
 
                 element.classList.add('landing-reveal-pending');
-                pendingElements.add(element);
+                pending.add(element);
                 observer.observe(element);
             },
             unobserve(element) {
                 if (!element) return;
-                pendingElements.delete(element);
                 observer?.unobserve(element);
+                finish(element);
             },
             disconnect() {
                 observer?.disconnect();
-                pendingElements.forEach(reveal);
-                pendingElements.clear();
+                for (const element of pending) {
+                    seen.add(element);
+                    finish(element);
+                }
+                for (const element of running.keys()) finish(element);
             }
         };
-
-        // Add auto-stagger to card grids and lists if not explicitly delayed
-        document.querySelectorAll('.grid, .landing-journey-steps, ul, ol').forEach(container => {
-            const children = Array.from(container.children).filter(child => child.classList?.contains('animate-on-scroll'));
-            if (children.length > 1) {
-                children.forEach((child, index) => {
-                    const hasDelay = Array.from(child.classList).some(c => c.startsWith('delay-'));
-                    if (!hasDelay) {
-                        const staggerMs = Math.min((index % 4) * 80, 320);
-                        if (staggerMs > 0) {
-                            child.style.transitionDelay = `${staggerMs}ms`;
-                        }
-                    }
-                });
-            }
-        });
 
         document.querySelectorAll(editorialTargets).forEach(element => element.classList.add('animate-on-scroll'));
         document.querySelectorAll('.animate-on-scroll').forEach(element => window.marketplaceObserver.observe(element));
 
-        // Keyboard navigation and a changed OS preference always take priority over motion.
+        // Keyboard navigation and reduced-motion changes always take priority.
         document.addEventListener('focusin', event => {
-            const element = event.target.closest('.animate-on-scroll');
-            if (element) reveal(element);
+            const element = event.target.closest?.('.animate-on-scroll');
+            if (!element) return;
+            seen.add(element);
+            observer?.unobserve(element);
+            finish(element);
         });
 
         window.addEventListener('beforeprint', () => {
-            pendingElements.forEach(reveal);
+            window.marketplaceObserver.disconnect();
         });
 
         preference.addEventListener?.('change', () => {
             if (!preference.matches) return;
             window.marketplaceObserver.disconnect();
-            document.querySelectorAll('.animate-on-scroll').forEach(reveal);
         });
 
-        // Multi-layer scroll & resize fallback for mobile (iOS Safari momentum scrolling & dynamic toolbars)
-        let ticking = false;
-        const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb => setTimeout(cb, 16));
-        const onScrollOrResize = () => {
-            if (pendingElements.size === 0) return;
-            if (!ticking) {
-                raf(() => {
-                    checkPendingVisibility();
-                    ticking = false;
-                });
-                ticking = true;
-            }
+        const onViewportChange = () => {
+            configureObserver();
+            revealVisiblePending();
         };
+        window.addEventListener('resize', onViewportChange, { passive: true });
+        window.addEventListener('orientationchange', onViewportChange, { passive: true });
+        window.addEventListener('scroll', revealVisiblePending, { passive: true });
+        window.addEventListener('touchmove', revealVisiblePending, { passive: true });
 
-        window.addEventListener('scroll', onScrollOrResize, { passive: true });
-        window.addEventListener('touchmove', onScrollOrResize, { passive: true });
-        window.addEventListener('resize', onScrollOrResize, { passive: true });
-        window.addEventListener('orientationchange', onScrollOrResize, { passive: true });
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) for (const element of running.keys()) finish(element);
+        });
 
-        // Initial layout settling passes: check if any pending elements entered view on load
-        raf(checkPendingVisibility);
-        setTimeout(checkPendingVisibility, 350);
-        setTimeout(checkPendingVisibility, 800);
         // Auto-advancing landing journey carousel on mobile with desktop-matching active effect
         document.querySelectorAll('.landing-journey').forEach(journey => {
             const steps = journey.querySelector('.landing-journey-steps');
